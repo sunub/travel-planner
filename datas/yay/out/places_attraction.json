@@ -1,0 +1,2263 @@
+[
+  {
+    "place_id": "tourapi:1018702",
+    "category": "attraction",
+    "district": "jung",
+    "name": "국제시장 먹자골목",
+    "address": "부산광역시 중구 중구로 36",
+    "lat": 35.1011311741,
+    "lng": 129.0280793175,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:126121",
+    "category": "attraction",
+    "district": "jung",
+    "name": "용두산공원",
+    "address": "부산광역시 중구 용두산길 37-55",
+    "lat": 35.1004440914145,
+    "lng": 129.032664302294,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA040500"
+    }
+  },
+  {
+    "place_id": "tourapi:126122",
+    "category": "attraction",
+    "district": "seo",
+    "name": "부산 송도해수욕장",
+    "address": "부산광역시 서구 송도해변로 100",
+    "lat": 35.0739256715,
+    "lng": 129.016458847,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020900"
+    }
+  },
+  {
+    "place_id": "tourapi:126658",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "태종대",
+    "address": "부산광역시 영도구 전망로 24 (동삼동)",
+    "lat": 35.05969491904282,
+    "lng": 129.07980569117214,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020800"
+    }
+  },
+  {
+    "place_id": "tourapi:126830",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산진성공원",
+    "address": "부산광역시 동구 자성로 99",
+    "lat": 35.135868230927,
+    "lng": 129.061096784383,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:126856",
+    "category": "attraction",
+    "district": "seo",
+    "name": "부산 중앙공원",
+    "address": "부산광역시 서구 망양로193번길 187 (동대신동2가)",
+    "lat": 35.1121438284,
+    "lng": 129.027954028,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:126857",
+    "category": "attraction",
+    "district": "jung",
+    "name": "광복로패션거리",
+    "address": "부산광역시 중구 광복로 72-1 (광복동2가)",
+    "lat": 35.0986398717,
+    "lng": 129.0327400915,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:127149",
+    "category": "attraction",
+    "district": "jung",
+    "name": "민주공원",
+    "address": "부산광역시 중구 민주공원길 19",
+    "lat": 35.1093802515,
+    "lng": 129.0281096457,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:127151",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산 차이나타운(상해문,상해거리)",
+    "address": "부산광역시 동구 중앙대로179번길 1 (초량동)",
+    "lat": 35.11339094915113,
+    "lng": 129.0385345717149,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE050100"
+    }
+  },
+  {
+    "place_id": "tourapi:127488",
+    "category": "attraction",
+    "district": "jung",
+    "name": "BIFF 광장",
+    "address": "부산광역시 중구 구덕로 지하44 (남포동5가)",
+    "lat": 35.0980089584166,
+    "lng": 129.032004281096,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:127752",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "태종대온천찜질방",
+    "address": "부산광역시 영도구 태종로 808",
+    "lat": 35.0645889744,
+    "lng": 129.0787786847,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX050100"
+    }
+  },
+  {
+    "place_id": "tourapi:1277679",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산타워",
+    "address": "부산광역시 중구 용두산길 37-30",
+    "lat": 35.101157344,
+    "lng": 129.0323310732,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS020100"
+    }
+  },
+  {
+    "place_id": "tourapi:128698",
+    "category": "attraction",
+    "district": "jung",
+    "name": "40계단 문화관광테마거리",
+    "address": "부산광역시 중구 중앙대로 73 (중앙동4가)",
+    "lat": 35.104,
+    "lng": 129.0347,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:128829",
+    "category": "attraction",
+    "district": "seo",
+    "name": "부산 암남공원",
+    "address": "부산광역시 서구 암남공원로 185",
+    "lat": 35.0589,
+    "lng": 129.0158,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:129093",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도마을",
+    "address": "부산광역시 서구 충무대로 47 (암남동)",
+    "lat": 35.0789056952,
+    "lng": 129.0178502571,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040200"
+    }
+  },
+  {
+    "place_id": "tourapi:129157",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도 등대",
+    "address": "부산광역시 영도구 전망로 181",
+    "lat": 35.0523536391521,
+    "lng": 129.092335072703,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010800"
+    }
+  },
+  {
+    "place_id": "tourapi:129197",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도대교",
+    "address": "부산광역시 영도구 대교동1가",
+    "lat": 35.0956,
+    "lng": 129.0365,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010300"
+    }
+  },
+  {
+    "place_id": "tourapi:129733",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산시민회관",
+    "address": "부산광역시 동구 자성로133번길 16",
+    "lat": 35.1387624107975,
+    "lng": 129.065168546966,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE060100"
+    }
+  },
+  {
+    "place_id": "tourapi:129737",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산 가톨릭센터",
+    "address": "부산광역시 중구 중구로 71",
+    "lat": 35.1041741398277,
+    "lng": 129.029006206858,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE060100"
+    }
+  },
+  {
+    "place_id": "tourapi:130153",
+    "category": "attraction",
+    "district": "jung",
+    "name": "백산기념관",
+    "address": "부산광역시 중구 백산길 11",
+    "lat": 35.1019383952,
+    "lng": 129.0345501964,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070200"
+    }
+  },
+  {
+    "place_id": "tourapi:130200",
+    "category": "attraction",
+    "district": "seo",
+    "name": "구덕민속예술관",
+    "address": "부산광역시 서구 대신공원로 34-91 (서대신동3가)",
+    "lat": 35.1239756631,
+    "lng": 129.0185100829,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE090400"
+    }
+  },
+  {
+    "place_id": "tourapi:130521",
+    "category": "attraction",
+    "district": "seo",
+    "name": "동아대학교 석당박물관",
+    "address": "부산광역시 서구 구덕로 225",
+    "lat": 35.1048849763,
+    "lng": 129.0187626974,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070100"
+    }
+  },
+  {
+    "place_id": "tourapi:130663",
+    "category": "attraction",
+    "district": "jung",
+    "name": "40계단문화관",
+    "address": "부산광역시 중구 동광길 49",
+    "lat": 35.1049935905065,
+    "lng": 129.034511226799,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:130774",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "동삼동패총전시관",
+    "address": "부산광역시 영도구 태종로 729",
+    "lat": 35.0712160269,
+    "lng": 129.079642317,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:130793",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "부산광역시 영도도서관",
+    "address": "부산광역시 영도구 함지로79번길 6",
+    "lat": 35.0755014082,
+    "lng": 129.0660433825,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE090300"
+    }
+  },
+  {
+    "place_id": "tourapi:130795",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산광역시립 중앙도서관",
+    "address": "부산광역시 중구 망양로193번길 146",
+    "lat": 35.10999405,
+    "lng": 129.0269458417,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE090300"
+    }
+  },
+  {
+    "place_id": "tourapi:130798",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산 동구도서관",
+    "address": "부산광역시 동구 성북로36번길 54",
+    "lat": 35.138088597,
+    "lng": 129.0524428566,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE090300"
+    }
+  },
+  {
+    "place_id": "tourapi:131452",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "함지골청소년수련관",
+    "address": "부산광역시 영도구 절영로 321",
+    "lat": 35.0744874138,
+    "lng": 129.0541777748,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "VE100200"
+    }
+  },
+  {
+    "place_id": "tourapi:131943",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도관광실탄사격장",
+    "address": "부산광역시 영도구 절영로 319",
+    "lat": 35.0735291869,
+    "lng": 129.0541194729,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "LS011200"
+    }
+  },
+  {
+    "place_id": "tourapi:1607242",
+    "category": "attraction",
+    "district": "dong",
+    "name": "보광사(부산)",
+    "address": "부산광역시 동구 범상로1번길 35",
+    "lat": 35.1408826262,
+    "lng": 129.0468821528,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:1607286",
+    "category": "attraction",
+    "district": "dong",
+    "name": "문화공감 수정(부산 수정동 일본식 가옥)",
+    "address": "부산광역시 동구 홍곡로 75 (수정동)",
+    "lat": 35.1255545014429,
+    "lng": 129.042636366052,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS011100"
+    }
+  },
+  {
+    "place_id": "tourapi:1607335",
+    "category": "attraction",
+    "district": "dong",
+    "name": "소림사(부산)",
+    "address": "부산광역시 동구 초량상로65번길 7 (초량동)",
+    "lat": 35.1177378193,
+    "lng": 129.0373336157,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:1608530",
+    "category": "attraction",
+    "district": "seo",
+    "name": "임시수도기념관",
+    "address": "부산광역시 서구 임시수도기념로 45 (부민동3가)",
+    "lat": 35.1037500037,
+    "lng": 129.0175964444,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070200"
+    }
+  },
+  {
+    "place_id": "tourapi:1608633",
+    "category": "attraction",
+    "district": "jung",
+    "name": "보수동 책방골목",
+    "address": "부산광역시 중구 대청로 67-1",
+    "lat": 35.1031742254,
+    "lng": 129.0272841727,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX061000"
+    }
+  },
+  {
+    "place_id": "tourapi:1608662",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산진성",
+    "address": "부산광역시 동구 자성로 99 (범일동)",
+    "lat": 35.135679,
+    "lng": 129.060523,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS010200"
+    }
+  },
+  {
+    "place_id": "tourapi:1608673",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산진일신여학교",
+    "address": "부산광역시 동구 정공단로17번길 17 (좌천동)",
+    "lat": 35.1349,
+    "lng": 129.0529,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030200"
+    }
+  },
+  {
+    "place_id": "tourapi:1608751",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "태종사",
+    "address": "부산광역시 영도구 전망로 119",
+    "lat": 35.0560095813,
+    "lng": 129.0897751849,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:1747948",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도문화예술회관",
+    "address": "부산광역시 영도구 함지로79번길 6 (동삼동)",
+    "lat": 35.0752653796,
+    "lng": 129.0668589505,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE060100"
+    }
+  },
+  {
+    "place_id": "tourapi:1756065",
+    "category": "attraction",
+    "district": "dong",
+    "name": "조선통신사역사관",
+    "address": "부산광역시 동구 자성로 99 (범일동)",
+    "lat": 35.135719916282724,
+    "lng": 129.06209586463672,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070100"
+    }
+  },
+  {
+    "place_id": "tourapi:1825843",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "국립해양박물관",
+    "address": "부산광역시 영도구 해양로301번길 45",
+    "lat": 35.0785003395,
+    "lng": 129.0802910274,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070100"
+    }
+  },
+  {
+    "place_id": "tourapi:1846830",
+    "category": "attraction",
+    "district": "dong",
+    "name": "남도해양열차 에스트레인(S-train)",
+    "address": "부산광역시 동구 중앙대로 206",
+    "lat": 35.1152715223,
+    "lng": 129.0424332391,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:1942233",
+    "category": "attraction",
+    "district": "jung",
+    "name": "대각사(부산)",
+    "address": "부산광역시 중구 광복중앙로 19 (신창동1가)",
+    "lat": 35.1010840062,
+    "lng": 129.0307152012,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:1942237",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산 구 백제병원",
+    "address": "부산광역시 동구 중앙대로209번길 16 (초량동)",
+    "lat": 35.116338835088456,
+    "lng": 129.03914176140657,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS011100"
+    }
+  },
+  {
+    "place_id": "tourapi:1942239",
+    "category": "attraction",
+    "district": "dong",
+    "name": "초량교회",
+    "address": "부산광역시 동구 초량상로 53",
+    "lat": 35.1171434347,
+    "lng": 129.0369614421,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030200"
+    }
+  },
+  {
+    "place_id": "tourapi:1942245",
+    "category": "attraction",
+    "district": "dong",
+    "name": "김민부전망대",
+    "address": "부산광역시 동구 영초윗길26번길 14 (초량동)",
+    "lat": 35.1176994980395,
+    "lng": 129.035345209069,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS020100"
+    }
+  },
+  {
+    "place_id": "tourapi:1942253",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "수리조선소길",
+    "address": "부산광역시 영도구 대평로 42",
+    "lat": 35.0923794753,
+    "lng": 129.033490197,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:1942299",
+    "category": "attraction",
+    "district": "dong",
+    "name": "남선창고터",
+    "address": "부산광역시 동구 초량로13번길 53",
+    "lat": 35.1167962983,
+    "lng": 129.0395112298,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS011100"
+    }
+  },
+  {
+    "place_id": "tourapi:1942314",
+    "category": "attraction",
+    "district": "dong",
+    "name": "이바구공작소",
+    "address": "부산광역시 동구 망양로486번길 14-13",
+    "lat": 35.1171267121,
+    "lng": 129.0338450468,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:1942331",
+    "category": "attraction",
+    "district": "dong",
+    "name": "당산",
+    "address": "부산광역시 동구 망양로478번길 13",
+    "lat": 35.1170893868025,
+    "lng": 129.034380349312,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030400"
+    }
+  },
+  {
+    "place_id": "tourapi:1942337",
+    "category": "attraction",
+    "district": "dong",
+    "name": "168계단",
+    "address": "부산광역시 동구 영초길197번길 9",
+    "lat": 35.1170894046269,
+    "lng": 129.03533581582,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:1942348",
+    "category": "attraction",
+    "district": "jung",
+    "name": "관수옥과 초량왜관 터",
+    "address": "부산광역시 중구 용두산길 37-55",
+    "lat": 35.1005396593,
+    "lng": 129.0327483723,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS010700"
+    }
+  },
+  {
+    "place_id": "tourapi:1945293",
+    "category": "attraction",
+    "district": "dong",
+    "name": "장기려기념 더 나눔센터",
+    "address": "부산광역시 동구 영초윗길 48",
+    "lat": 35.1185793062,
+    "lng": 129.0327117725,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070200"
+    }
+  },
+  {
+    "place_id": "tourapi:1945300",
+    "category": "attraction",
+    "district": "dong",
+    "name": "유치환 우체통 전망대",
+    "address": "부산광역시 동구 망양로580번길 2 (초량동)",
+    "lat": 35.1220958828546,
+    "lng": 129.033841502225,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS020100"
+    }
+  },
+  {
+    "place_id": "tourapi:1957694",
+    "category": "attraction",
+    "district": "jung",
+    "name": "용두산 자갈치 관광특구",
+    "address": "부산광역시 중구 자갈치해안로 52",
+    "lat": 35.0966650543,
+    "lng": 129.0306014426,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE050100"
+    }
+  },
+  {
+    "place_id": "tourapi:1960614",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부평족발골목",
+    "address": "부산광역시 중구 광복로12번길 3",
+    "lat": 35.0991746800796,
+    "lng": 129.026428807255,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:1960620",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산 자갈치 양곱창 골목",
+    "address": "부산광역시 중구 구덕로 73",
+    "lat": 35.0973677005,
+    "lng": 129.0277461155,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:2470024",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "삼진어묵 체험·역사과학관",
+    "address": "부산광역시 영도구 절영로7번길 41-1 (봉래동2가)",
+    "lat": 35.0928101531,
+    "lng": 129.0427254928,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX061000"
+    }
+  },
+  {
+    "place_id": "tourapi:2504464",
+    "category": "attraction",
+    "district": "seo",
+    "name": "부산 송도해상케이블카",
+    "address": "부산광역시 서구 송도해변로 171",
+    "lat": 35.0766411637,
+    "lng": 129.023396378,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:252561",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "절영해안산책로",
+    "address": "부산광역시 영도구 해안산책길 52",
+    "lat": 35.0812475294,
+    "lng": 129.0411870536,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA050100"
+    }
+  },
+  {
+    "place_id": "tourapi:252562",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "부산대교",
+    "address": "부산광역시 영도구 봉래나루로 79 (봉래동1가)",
+    "lat": 35.0945765502,
+    "lng": 129.0388146742,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010300"
+    }
+  },
+  {
+    "place_id": "tourapi:252563",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "봉래산(부산)",
+    "address": "부산광역시 영도구 청학동",
+    "lat": 35.0822,
+    "lng": 129.0553,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA010100"
+    }
+  },
+  {
+    "place_id": "tourapi:252564",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "75광장",
+    "address": "부산광역시 영도구 동삼동",
+    "lat": 35.0706226,
+    "lng": 129.0580351,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:2554068",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산영화체험박물관",
+    "address": "부산광역시 중구 대청로126번길 12",
+    "lat": 35.1017589855,
+    "lng": 129.0336899238,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX061000"
+    }
+  },
+  {
+    "place_id": "tourapi:2554070",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "깡깡이 예술마을",
+    "address": "부산광역시 영도구 대평북로 36",
+    "lat": 35.0932043968,
+    "lng": 129.0342206663,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040200"
+    }
+  },
+  {
+    "place_id": "tourapi:2557807",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도 구름산책로",
+    "address": "부산광역시 서구 암남동 129-4",
+    "lat": 35.0753645109,
+    "lng": 129.0224999494,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "LS011900"
+    }
+  },
+  {
+    "place_id": "tourapi:2605916",
+    "category": "attraction",
+    "district": "dong",
+    "name": "초량 이바구길",
+    "address": "부산 동구 초량동 865-48",
+    "lat": 35.1169,
+    "lng": 129.0367,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:2606221",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도 흰여울해안터널",
+    "address": "부산광역시 영도구 영선동4가 1044-6",
+    "lat": 35.0779590845,
+    "lng": 129.0453201165,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010600"
+    }
+  },
+  {
+    "place_id": "tourapi:2614716",
+    "category": "attraction",
+    "district": "seo",
+    "name": "두도",
+    "address": "부산광역시 서구 암남동",
+    "lat": 35.0490923097,
+    "lng": 129.0148985467,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020500"
+    }
+  },
+  {
+    "place_id": "tourapi:2614725",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도반도 (부산 국가지질공원)",
+    "address": "부산광역시 서구 암남동",
+    "lat": 35.0659655069,
+    "lng": 129.019511576,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA030500"
+    }
+  },
+  {
+    "place_id": "tourapi:2656194",
+    "category": "attraction",
+    "district": "dong",
+    "name": "친환경 스카이웨이 전망대(이바구길)",
+    "address": "부산광역시 동구 초량동",
+    "lat": 35.1213095185,
+    "lng": 129.0306535435,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2661446",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "아미르공원",
+    "address": "부산광역시 영도구 해양로301번길 55 (동삼동)",
+    "lat": 35.07716670828908,
+    "lng": 129.08195628761837,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030100"
+    }
+  },
+  {
+    "place_id": "tourapi:2661479",
+    "category": "attraction",
+    "district": "seo",
+    "name": "구덕야영장",
+    "address": "부산광역시 서구 꽃마을로156번길 109",
+    "lat": 35.1255490417,
+    "lng": 129.0096907503,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "AC050100"
+    }
+  },
+  {
+    "place_id": "tourapi:2669544",
+    "category": "attraction",
+    "district": "jung",
+    "name": "역사의 디오라마",
+    "address": "부산광역시 중구 영주로 93",
+    "lat": 35.114466,
+    "lng": 129.032977,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2675032",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "청학배수지 전망대",
+    "address": "부산광역시 영도구 와치로 36",
+    "lat": 35.088351580481,
+    "lng": 129.060042641103,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2684712",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "흰여울문화마을",
+    "address": "부산광역시 영도구 절영로 194 (영선동4가)",
+    "lat": 35.0798897489,
+    "lng": 129.0435396078,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX030100"
+    }
+  },
+  {
+    "place_id": "tourapi:2684738",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도용궁구름다리",
+    "address": "부산광역시 서구 암남동 620-53",
+    "lat": 35.0619178693452,
+    "lng": 129.021988581433,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010300"
+    }
+  },
+  {
+    "place_id": "tourapi:2708108",
+    "category": "attraction",
+    "district": "dong",
+    "name": "범일 이중섭거리",
+    "address": "부산광역시 동구 범일동",
+    "lat": 35.1403327856,
+    "lng": 129.0521955945,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:2720650",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "피아크",
+    "address": "부산광역시 영도구 해양로195번길 180",
+    "lat": 35.086329908245,
+    "lng": 129.076763361805,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE120300"
+    }
+  },
+  {
+    "place_id": "tourapi:2721158",
+    "category": "attraction",
+    "district": "seo",
+    "name": "천마산하늘전망대",
+    "address": "부산광역시 서구 해돋이로183번길 17-4",
+    "lat": 35.093648481,
+    "lng": 129.0173415667,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2726803",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산항힐링야영장",
+    "address": "부산광역시 중구 이순신대로 72 (중앙동4가)",
+    "lat": 35.1057837263,
+    "lng": 129.0440916874,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "AC050100"
+    }
+  },
+  {
+    "place_id": "tourapi:2736377",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도 조내기 고구마 역사기념관",
+    "address": "부산광역시 영도구 벚꽃길 75 (청학동)",
+    "lat": 35.0852925895,
+    "lng": 129.0583274222,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070200"
+    }
+  },
+  {
+    "place_id": "tourapi:2736392",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "청학수변공원",
+    "address": "부산광역시 영도구 청학동 217-43",
+    "lat": 35.0977293865,
+    "lng": 129.0611626448,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:2740063",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도 하늘전망대",
+    "address": "부산광역시 영도구 동삼동",
+    "lat": 35.0719,
+    "lng": 129.0547,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2744597",
+    "category": "attraction",
+    "district": "seo",
+    "name": "구덕문화공원",
+    "address": "부산광역시 서구 꽃마을로163번길 73 (서대신동3가)",
+    "lat": 35.1264334874,
+    "lng": 129.0058166756,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030500"
+    }
+  },
+  {
+    "place_id": "tourapi:2760699",
+    "category": "attraction",
+    "district": "seo",
+    "name": "비석문화마을",
+    "address": "부산광역시 서구 아미로 49 (아미동2가)",
+    "lat": 35.0998088253,
+    "lng": 129.0124202609,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040200"
+    }
+  },
+  {
+    "place_id": "tourapi:2760704",
+    "category": "attraction",
+    "district": "seo",
+    "name": "닥밭골 벽화마을",
+    "address": "부산 서구 동대신동2가 87-218",
+    "lat": 35.1142867370919,
+    "lng": 129.023561990559,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040200"
+    }
+  },
+  {
+    "place_id": "tourapi:2783336",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "아레아식스(AREA6)",
+    "address": "부산광역시 영도구 태종로105번길 37-3 (봉래동2가)",
+    "lat": 35.09287694724983,
+    "lng": 129.04297740548037,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE120300"
+    }
+  },
+  {
+    "place_id": "tourapi:2784333",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "부산남항",
+    "address": "부산광역시 영도구 대평북로 6 (대교동1가)",
+    "lat": 35.09186201794041,
+    "lng": 129.03721411073323,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020700"
+    }
+  },
+  {
+    "place_id": "tourapi:2784356",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도해안볼레길",
+    "address": "부산광역시 서구 암남동 산123-18",
+    "lat": 35.0671838594,
+    "lng": 129.0189192778,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "LS011900"
+    }
+  },
+  {
+    "place_id": "tourapi:2785271",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "부산항 영도 크루즈터미널",
+    "address": "부산광역시 영도구 해양로301번길 17 (동삼동)",
+    "lat": 35.080760367516184,
+    "lng": 129.0791693630236,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070100"
+    }
+  },
+  {
+    "place_id": "tourapi:2785289",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "감지해변",
+    "address": "부산광역시 영도구 감지길 110",
+    "lat": 35.06,
+    "lng": 129.0775,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020900"
+    }
+  },
+  {
+    "place_id": "tourapi:2787164",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "하리선착장(부산)",
+    "address": "부산광역시 영도구 하리해안길 17-5 (동삼동)",
+    "lat": 35.070554,
+    "lng": 129.081445,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA020700"
+    }
+  },
+  {
+    "place_id": "tourapi:2788424",
+    "category": "attraction",
+    "district": "seo",
+    "name": "누리바라기전망대",
+    "address": "부산광역시 서구 남부민동 50-40",
+    "lat": 35.0907588894739,
+    "lng": 129.020301832573,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:298111",
+    "category": "attraction",
+    "district": "dong",
+    "name": "금수사(부산)",
+    "address": "부산광역시 동구 망양로 533-1",
+    "lat": 35.1204207111,
+    "lng": 129.029678653,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:2994364",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도스카이파크",
+    "address": "부산광역시 서구 암남공원로 181 (암남동)",
+    "lat": 35.0613530661,
+    "lng": 129.0204027392,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:2999905",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "플루니티",
+    "address": "부산광역시 영도구 번영길 8",
+    "lat": 35.0923294203,
+    "lng": 129.0452680638,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:3015944",
+    "category": "attraction",
+    "district": "dong",
+    "name": "북두칠성도서관",
+    "address": "부산광역시 동구 충장대로 160 (초량동)",
+    "lat": 35.1157311045509,
+    "lng": 129.04527412430312,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE090300"
+    }
+  },
+  {
+    "place_id": "tourapi:3016002",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산과학체험관",
+    "address": "부산광역시 동구 중앙대로260번길 11 (초량동)",
+    "lat": 35.12032107456868,
+    "lng": 129.04412784872156,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:3016752",
+    "category": "attraction",
+    "district": "dong",
+    "name": "동구 문화플랫폼",
+    "address": "부산광역시 동구 중앙대로 380 (좌천동)",
+    "lat": 35.12896436753418,
+    "lng": 129.04939685387973,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE120300"
+    }
+  },
+  {
+    "place_id": "tourapi:3016775",
+    "category": "attraction",
+    "district": "dong",
+    "name": "증산공원",
+    "address": "부산광역시 동구 성북로36번길 46 (범일동)",
+    "lat": 35.137907708742524,
+    "lng": 129.05165797671592,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030400"
+    }
+  },
+  {
+    "place_id": "tourapi:3016808",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산역 풍물거리",
+    "address": "부산광역시 동구 중앙대로196번길 16-8 (초량동)",
+    "lat": 35.1135579305,
+    "lng": 129.0406652085,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  },
+  {
+    "place_id": "tourapi:3017067",
+    "category": "attraction",
+    "district": "dong",
+    "name": "망양로 산복도로전시관",
+    "address": "부산광역시 동구 망양로 488 (초량동)",
+    "lat": 35.1176742075,
+    "lng": 129.0332089831,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:3017214",
+    "category": "attraction",
+    "district": "seo",
+    "name": "천마산 조각공원",
+    "address": "부산 서구 암남동 산4-26",
+    "lat": 35.088059,
+    "lng": 129.016095,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE030400"
+    }
+  },
+  {
+    "place_id": "tourapi:3017282",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도해녀문화전시관",
+    "address": "부산광역시 영도구 중리남로 2-36 (동삼동)",
+    "lat": 35.06700303779476,
+    "lng": 129.06604279251692,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:3017319",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "이송도전망대",
+    "address": "부산광역시 영도구 절영로 246-36 (영선동4가)",
+    "lat": 35.075519,
+    "lng": 129.047956,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:3017347",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "해돋이전망대",
+    "address": "부산광역시 영도구 해돋이3길 410-1 (청학동)",
+    "lat": 35.0891108108,
+    "lng": 129.0559688873,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:3017395",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "복천사(부산)",
+    "address": "부산광역시 영도구 산정길 41 (신선동3가)",
+    "lat": 35.08247958477894,
+    "lng": 129.05050238462923,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:3017435",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "중리노을전망대",
+    "address": "부산광역시 영도구 동삼동",
+    "lat": 35.0692381886,
+    "lng": 129.0643270354,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:3017467",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "중리항 방파제 등대",
+    "address": "부산광역시 영도구 중리남로 2-15 (동삼동)",
+    "lat": 35.067993,
+    "lng": 129.064176,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010800"
+    }
+  },
+  {
+    "place_id": "tourapi:3017488",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도어울림문화공원",
+    "address": "부산광역시 영도구 함지로79번길 6 (동삼동)",
+    "lat": 35.0752653795657,
+    "lng": 129.066858950494,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE030400"
+    }
+  },
+  {
+    "place_id": "tourapi:3028538",
+    "category": "attraction",
+    "district": "dong",
+    "name": "책마루전망대",
+    "address": "부산광역시 동구 성북로36번길 54 (범일동)",
+    "lat": 35.138054703395184,
+    "lng": 129.05242551737072,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:3028565",
+    "category": "attraction",
+    "district": "dong",
+    "name": "이중섭전망대",
+    "address": "부산광역시 동구 증산로 168 (범일동)",
+    "lat": 35.14059298912447,
+    "lng": 129.05263133974444,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE010200"
+    }
+  },
+  {
+    "place_id": "tourapi:304811",
+    "category": "attraction",
+    "district": "dong",
+    "name": "묘심사(부산)",
+    "address": "부산광역시 동구 망양로 671",
+    "lat": 35.126761849,
+    "lng": 129.0395054026,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:3064803",
+    "category": "attraction",
+    "district": "jung",
+    "name": "우리글방 북카페",
+    "address": "부산광역시 중구 대청로 63 (보수동1가)",
+    "lat": 35.10324001601273,
+    "lng": 129.0268826330457,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE120100"
+    }
+  },
+  {
+    "place_id": "tourapi:3064821",
+    "category": "attraction",
+    "district": "jung",
+    "name": "자갈치 크루즈",
+    "address": "부산광역시 중구 자갈치해안로 60 (남포동4가)",
+    "lat": 35.0967261783,
+    "lng": 129.0317124553,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070100"
+    }
+  },
+  {
+    "place_id": "tourapi:3064931",
+    "category": "attraction",
+    "district": "jung",
+    "name": "색채마을",
+    "address": "부산광역시 중구 망양로 327-1 (대청동4가)",
+    "lat": 35.1070333171,
+    "lng": 129.0294707029,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX030100"
+    }
+  },
+  {
+    "place_id": "tourapi:3074661",
+    "category": "attraction",
+    "district": "seo",
+    "name": "송도해양레포츠센터",
+    "address": "부산광역시 서구 송도해변로 50 (암남동)",
+    "lat": 35.0738076231,
+    "lng": 129.0164197314,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "LS020200"
+    }
+  },
+  {
+    "place_id": "tourapi:3074669",
+    "category": "attraction",
+    "district": "jung",
+    "name": "BNK부산은행조은극장",
+    "address": "부산광역시 중구 구덕로34번길 4 (남포동2가)",
+    "lat": 35.098267081308684,
+    "lng": 129.03230804960634,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE060100"
+    }
+  },
+  {
+    "place_id": "tourapi:3083767",
+    "category": "attraction",
+    "district": "jung",
+    "name": "부산근현대역사관 본관",
+    "address": "부산광역시 중구 대청로 112 (대청동1가)",
+    "lat": 35.1027616225,
+    "lng": 129.032190027,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070100"
+    }
+  },
+  {
+    "place_id": "tourapi:3345026",
+    "category": "attraction",
+    "district": "jung",
+    "name": "BNK부산은행아트시네마 모퉁이극장",
+    "address": "부산광역시 중구 광복중앙로 13 (신창동1가)",
+    "lat": 35.100515,
+    "lng": 129.030797,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE060200"
+    }
+  },
+  {
+    "place_id": "tourapi:337442",
+    "category": "attraction",
+    "district": "dong",
+    "name": "연등사(부산)",
+    "address": "부산광역시 동구 좌천동로 17-3 (좌천동)",
+    "lat": 35.1330762737697,
+    "lng": 129.049195279133,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:3375297",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "태종대 오션플라잉 테마파크",
+    "address": "부산광역시 영도구 태종로836번길 55 (동삼동)",
+    "lat": 35.06083536151677,
+    "lng": 129.07854368510672,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE020100"
+    }
+  },
+  {
+    "place_id": "tourapi:3410658",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "아르떼뮤지엄 부산",
+    "address": "부산광역시 영도구 해양로247번길 29 (동삼동)",
+    "lat": 35.08693373984686,
+    "lng": 129.07656229149976,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070600"
+    }
+  },
+  {
+    "place_id": "tourapi:3422573",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "영도 마리노 오토캠핑장",
+    "address": "부산광역시 영도구 해양로 13-16 (청학동)",
+    "lat": 35.10150467085628,
+    "lng": 129.06054103674242,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "28",
+      "class_code": "AC050200"
+    }
+  },
+  {
+    "place_id": "tourapi:3426656",
+    "category": "attraction",
+    "district": "dong",
+    "name": "부산북항 친수공원",
+    "address": "부산광역시 동구 이순신대로 164 (초량동)",
+    "lat": 35.114419907321064,
+    "lng": 129.04662207968232,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "NA050100"
+    }
+  },
+  {
+    "place_id": "tourapi:3452166",
+    "category": "attraction",
+    "district": "dong",
+    "name": "커넥트현대",
+    "address": "부산광역시 동구 범일로 125 (범일동)",
+    "lat": 35.1413411243,
+    "lng": 129.0586005649,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE120300"
+    }
+  },
+  {
+    "place_id": "tourapi:3466755",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "테이블플라워",
+    "address": "부산광역시 영도구 절영로 248-1 (영선동4가)",
+    "lat": 35.07638429108179,
+    "lng": 129.04763906754965,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:3544248",
+    "category": "attraction",
+    "district": "jung",
+    "name": "추억보물섬",
+    "address": "부산광역시 중구 중구로23번길 9 (부평동1가)",
+    "lat": 35.09985500360154,
+    "lng": 129.02737439644028,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:3545373",
+    "category": "attraction",
+    "district": "seo",
+    "name": "소망계단 모노레일",
+    "address": "부산광역시 서구 동대신동2가",
+    "lat": 35.114443741372696,
+    "lng": 129.02473782396245,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX070200"
+    }
+  },
+  {
+    "place_id": "tourapi:3545977",
+    "category": "attraction",
+    "district": "yeongdo",
+    "name": "라보드 우든보트",
+    "address": "부산광역시 영도구 나팔꽃길 33 (봉래동5가)",
+    "lat": 35.0926530954171,
+    "lng": 129.051455492089,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "EX020400"
+    }
+  },
+  {
+    "place_id": "tourapi:4083886",
+    "category": "attraction",
+    "district": "dong",
+    "name": "명란브랜드연구소",
+    "address": "부산광역시 동구 영초윗길 22-1 (초량동)",
+    "lat": 35.1171009722,
+    "lng": 129.0350159855,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "14",
+      "class_code": "VE070300"
+    }
+  },
+  {
+    "place_id": "tourapi:777057",
+    "category": "attraction",
+    "district": "seo",
+    "name": "내원정사(부산)",
+    "address": "부산광역시 서구 엄광산로40번길 80 (서대신동3가)",
+    "lat": 35.126549968,
+    "lng": 129.011729068,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "HS030100"
+    }
+  },
+  {
+    "place_id": "tourapi:985921",
+    "category": "attraction",
+    "district": "jung",
+    "name": "미술의거리",
+    "address": "부산광역시 중구 신창동4가",
+    "lat": 35.1006395595,
+    "lng": 129.0279265666,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "12",
+      "class_code": "VE040100"
+    }
+  }
+]
