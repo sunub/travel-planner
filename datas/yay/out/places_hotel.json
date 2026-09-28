@@ -1,0 +1,631 @@
+[
+  {
+    "place_id": "tourapi:138089",
+    "category": "hotel",
+    "district": "dong",
+    "name": "부산뷰호텔",
+    "address": "부산광역시 동구 중앙대로196번길 16-10",
+    "lat": 35.1133593856411,
+    "lng": 129.04056598703,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC040100"
+    }
+  },
+  {
+    "place_id": "tourapi:138575",
+    "category": "hotel",
+    "district": "jung",
+    "name": "엘리제호텔",
+    "address": "부산광역시 중구 대청로126번길 22",
+    "lat": 35.1009551670942,
+    "lng": 129.033989164733,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC040100"
+    }
+  },
+  {
+    "place_id": "tourapi:142852",
+    "category": "hotel",
+    "district": "jung",
+    "name": "코모도 호텔 부산",
+    "address": "부산광역시 중구 중구로 151 (영주동)",
+    "lat": 35.108816558,
+    "lng": 129.03530348,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:142855",
+    "category": "hotel",
+    "district": "jung",
+    "name": "부산관광호텔",
+    "address": "부산광역시 중구 광복로97번길 23 (동광동2가)",
+    "lat": 35.1002922980013,
+    "lng": 129.034628939712,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:142861",
+    "category": "hotel",
+    "district": "dong",
+    "name": "라메르호텔",
+    "address": "부산광역시 동구 조방로34번길 9",
+    "lat": 35.1405246178,
+    "lng": 129.062319709,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:142863",
+    "category": "hotel",
+    "district": "dong",
+    "name": "프라임관광호텔",
+    "address": "부산광역시 동구 중앙대로 399 (수정동)",
+    "lat": 35.1305829766134,
+    "lng": 129.050188153756,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:142870",
+    "category": "hotel",
+    "district": "jung",
+    "name": "힐사이드 호텔",
+    "address": "부산광역시 중구 중구로 160",
+    "lat": 35.1092097880604,
+    "lng": 129.035960975255,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:142874",
+    "category": "hotel",
+    "district": "dong",
+    "name": "광장관광호텔",
+    "address": "부산광역시 동구 중앙대로214번길 7",
+    "lat": 35.1161757352689,
+    "lng": 129.04133805947,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:1798940",
+    "category": "hotel",
+    "district": "jung",
+    "name": "타워힐호텔",
+    "address": "부산광역시 중구 백산길 20",
+    "lat": 35.1011523732593,
+    "lng": 129.034372456907,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2378912",
+    "category": "hotel",
+    "district": "dong",
+    "name": "호텔포레 더 스파",
+    "address": "부산광역시 동구 중앙대로296번길 6",
+    "lat": 35.1226151856,
+    "lng": 129.0446439572,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2509838",
+    "category": "hotel",
+    "district": "jung",
+    "name": "지엔비호텔(GNB호텔)",
+    "address": "부산광역시 중구 흑교로 19 (부평동3가)",
+    "lat": 35.1012588776,
+    "lng": 129.0248379298,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2531416",
+    "category": "hotel",
+    "district": "jung",
+    "name": "센트럴파크 호텔",
+    "address": "부산광역시 중구 해관로 20",
+    "lat": 35.1005108115082,
+    "lng": 129.035950105395,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2544728",
+    "category": "hotel",
+    "district": "dong",
+    "name": "르이데아호텔",
+    "address": "부산광역시 동구 중앙대로180번길 16-10 (초량동)",
+    "lat": 35.11212433006752,
+    "lng": 129.04010312608173,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2548508",
+    "category": "hotel",
+    "district": "jung",
+    "name": "스탠포드호텔 부산",
+    "address": "부산광역시 중구 구덕로 53",
+    "lat": 35.0978526787158,
+    "lng": 129.029931295153,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2569922",
+    "category": "hotel",
+    "district": "seo",
+    "name": "La Casa del Sol (라까사델솔 게스트하우스)",
+    "address": "부산광역시 서구 부용로 14-36",
+    "lat": 35.1080051969,
+    "lng": 129.0167912233,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2570213",
+    "category": "hotel",
+    "district": "yeongdo",
+    "name": "AJ하우스(AJ House)",
+    "address": "부산광역시 영도구 태종로 40",
+    "lat": 35.0945070713,
+    "lng": 129.0365232086,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2572851",
+    "category": "hotel",
+    "district": "dong",
+    "name": "모닝듀 게스트 하우스(모닝듀)",
+    "address": "부산광역시 동구 초량중로21번길 5-2",
+    "lat": 35.1141493149,
+    "lng": 129.036433792,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2595879",
+    "category": "hotel",
+    "district": "yeongdo",
+    "name": "비치모텔",
+    "address": "부산광역시 영도구 하리해안길 10-9 비치모텔",
+    "lat": 35.0692440569,
+    "lng": 129.0813283358,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC040100"
+    }
+  },
+  {
+    "place_id": "tourapi:2607423",
+    "category": "hotel",
+    "district": "dong",
+    "name": "이바구캠프",
+    "address": "부산광역시 동구 망양로525번길 22",
+    "lat": 35.1192013827,
+    "lng": 129.0285565614,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2622969",
+    "category": "hotel",
+    "district": "dong",
+    "name": "싱글싱글",
+    "address": "부산광역시 동구 초량중로 18-1",
+    "lat": 35.1137465906,
+    "lng": 129.036839323,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2651268",
+    "category": "hotel",
+    "district": "jung",
+    "name": "하운드호텔 프리미어 남포",
+    "address": "부산광역시 중구 보수대로 24",
+    "lat": 35.0991163330558,
+    "lng": 129.025326133838,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2651318",
+    "category": "hotel",
+    "district": "jung",
+    "name": "콘트호텔",
+    "address": "부산광역시 중구 용두산길 12",
+    "lat": 35.1018633453,
+    "lng": 129.031400492,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2696456",
+    "category": "hotel",
+    "district": "jung",
+    "name": "브로시스 호텔",
+    "address": "부산광역시 중구 구덕로48번길 4",
+    "lat": 35.0986453934,
+    "lng": 129.030929138,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC060200"
+    }
+  },
+  {
+    "place_id": "tourapi:2708667",
+    "category": "hotel",
+    "district": "jung",
+    "name": "호텔포레 프리미어 남포",
+    "address": "부산광역시 중구 구덕로 54-1",
+    "lat": 35.0984231743,
+    "lng": 129.0297348037,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2708673",
+    "category": "hotel",
+    "district": "yeongdo",
+    "name": "라발스호텔",
+    "address": "부산광역시 영도구 봉래나루로 82 (봉래동1가)",
+    "lat": 35.0944992426888,
+    "lng": 129.039129890579,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2708693",
+    "category": "hotel",
+    "district": "dong",
+    "name": "아몬드호텔",
+    "address": "부산광역시 동구 중앙대로196번길 12-5",
+    "lat": 35.1137704500862,
+    "lng": 129.040657633797,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2804372",
+    "category": "hotel",
+    "district": "dong",
+    "name": "하운드호텔 부산역점",
+    "address": "부산광역시 동구 중앙대로236번길 9 하운드호텔",
+    "lat": 35.1177518053,
+    "lng": 129.0427025928,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2832276",
+    "category": "hotel",
+    "district": "dong",
+    "name": "라마다 앙코르 바이윈덤 부산역 호텔",
+    "address": "부산광역시 동구 중앙대로196번길 10 부산역라마다앙코르호텔",
+    "lat": 35.1142426105222,
+    "lng": 129.040324318478,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:2892757",
+    "category": "hotel",
+    "district": "dong",
+    "name": "노떼 라 미아 호텔",
+    "address": "부산광역시 동구 대영로 265",
+    "lat": 35.111846856,
+    "lng": 129.0397363452,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC040100"
+    }
+  },
+  {
+    "place_id": "tourapi:3001077",
+    "category": "hotel",
+    "district": "yeongdo",
+    "name": "아델라호텔",
+    "address": "부산광역시 영도구 태종로 45 (대교동1가)",
+    "lat": 35.0939426741,
+    "lng": 129.0373709415,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:3028593",
+    "category": "hotel",
+    "district": "yeongdo",
+    "name": "베이하운드호텔",
+    "address": "부산광역시 영도구 태종로65번길 11 (대교동1가)",
+    "lat": 35.0931822552,
+    "lng": 129.0384647425,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC040100"
+    }
+  },
+  {
+    "place_id": "tourapi:3044634",
+    "category": "hotel",
+    "district": "jung",
+    "name": "크라운 하버 호텔 부산",
+    "address": "부산광역시 중구 중앙대로 114 (중앙동4가)",
+    "lat": 35.1076056112,
+    "lng": 129.0368450457,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:3386773",
+    "category": "hotel",
+    "district": "seo",
+    "name": "윈덤 그랜드 부산",
+    "address": "부산광역시 서구 등대로 27 (암남동)",
+    "lat": 35.0784043189576,
+    "lng": 129.02419847956068,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:3464876",
+    "category": "hotel",
+    "district": "dong",
+    "name": "아스티호텔 부산",
+    "address": "부산광역시 동구 중앙대로214번길 7-8 (초량동)",
+    "lat": 35.1165019291,
+    "lng": 129.0418304807,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:583031",
+    "category": "hotel",
+    "district": "jung",
+    "name": "토요코인호텔 부산역2점",
+    "address": "부산광역시 중구 중앙대로 125",
+    "lat": 35.1090237108161,
+    "lng": 129.036602587272,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:861118",
+    "category": "hotel",
+    "district": "dong",
+    "name": "토요코인호텔 부산역1점",
+    "address": "부산광역시 동구 중앙대로196번길 12 (초량동)",
+    "lat": 35.1141320276983,
+    "lng": 129.040767366836,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  },
+  {
+    "place_id": "tourapi:986534",
+    "category": "hotel",
+    "district": "seo",
+    "name": "부산 비치 관광호텔",
+    "address": "부산광역시 서구 등대로 113",
+    "lat": 35.0849763476247,
+    "lng": 129.026265325307,
+    "phone": null,
+    "sources": [
+      "tourapi"
+    ],
+    "facts": {
+      "content_type_id": "32",
+      "class_code": "AC010100"
+    }
+  }
+]
