@@ -1,0 +1,6 @@
+# LoRA · Gold Only. base 모델을 16bit(bf16, 미지원 GPU는 fp16)로 올린다.
+# 주의: Gemma4 E4B는 임베딩 포함 약 8B 파라미터라 16bit 가중치만 약 16GB다. 12GB GPU에서는 메모리가 부족할 가능성이 높다.
+defaults: sft_common.yaml
+
+experiment_name: lora_gold
+method: lora

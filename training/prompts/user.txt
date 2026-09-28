@@ -1,0 +1,9 @@
+[장소 종류] $category_ko ($category)
+
+[허용 aspect와 attribute]
+$aspect_table
+
+[traveler_context 허용값] $traveler_values
+
+[리뷰]
+$review

@@ -1,0 +1,36 @@
+# LoRA · QLoRA가 공유하는 학습 설정. 두 방식의 차이는 lora_gold_v1.yaml / qlora_gold_v1.yaml에만 둔다.
+defaults: common.yaml
+
+lora:
+  r: 16                     # 프로젝트 계획의 시작값
+  alpha: 32                 # 프로젝트 계획의 시작값
+  dropout: 0.05             # TODO: 확인 필요 (임시값)
+  # Gemma4 텍스트 타워의 nn.Linear만 고르는 정규식 (transformers 5.17 modeling_gemma4.py에서 확인).
+  # vision/audio 타워의 같은 이름 모듈(Gemma4ClippableLinear)은 language_model 아래가 아니라서 빠진다.
+  target_modules: '.*language_model.*\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)$'
+  bias: none
+
+training:
+  learning_rate: 2.0e-4     # 프로젝트 계획의 시작값
+  num_train_epochs: 3       # 프로젝트 계획의 시작값
+  # 아래는 아직 정하지 않은 값이다. 12GB GPU에서 돌아가도록 잡은 임시값이므로 확인 후 바꾼다.
+  per_device_train_batch_size: 2    # TODO: 확인 필요
+  per_device_eval_batch_size: 2     # TODO: 확인 필요
+  gradient_accumulation_steps: 8    # TODO: 확인 필요 (유효 배치 16)
+  max_length: 2048                  # TODO: 확인 필요. 이보다 긴 예제가 있으면 학습 전에 멈춘다
+  warmup_steps: 0.03                # TODO: 확인 필요. 1 미만이면 전체 step 대비 비율 (transformers 5 규칙)
+  weight_decay: 0.0                 # TODO: 확인 필요
+  lr_scheduler_type: cosine         # TODO: 확인 필요
+  max_grad_norm: 1.0
+  optim: adamw_torch
+  gradient_checkpointing: true
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  report_to: none           # tensorboard / wandb로 바꿀 수 있다 (로컬 로그는 Git 제외)
+  extra_args: {}            # 그 밖의 SFTConfig 인자를 코드 수정 없이 넘긴다
+
+evaluation:
+  run_after_train: true     # 학습이 끝나면 같은 run에서 Gold Test를 생성 · 채점한다
+  split: test

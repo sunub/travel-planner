@@ -1,0 +1,44 @@
+# 모든 실험이 공유하는 기본값. 실험 설정은 `defaults: common.yaml`로 물려받고 바꿀 값만 적는다.
+# 상대 경로는 저장소 루트 기준이다.
+
+seed: 42
+
+model:
+  # 학습 · Base 평가에 쓸 원본 모델 (Hugging Face model_id). instruction-tuned라 chat template이 있다.
+  # Ollama gemma4:e4b(Teacher)와 같은 E4B-it 계열이지만, 이쪽은 양자화하지 않은 원본 가중치다.
+  # CLI의 --model <id>로 바꿀 수 있다. 로컬 폴더 경로도 된다.
+  name_or_path: google/gemma-4-E4B-it
+  revision: null            # 재현성을 위해 커밋 해시로 고정할 수 있다
+  attn_implementation: sdpa
+  device_map: null          # null이면 GPU 0 하나에 올린다
+
+data:
+  dataset_path: datas/lkh/out/gold_review.jsonl   # Git 제외 폴더. 원본은 읽기만 한다
+  dataset_version: gold_review_v1
+  split_manifest: training/data/splits/gold_split_v1.json
+  # Gold + Silver 실험에서 Silver JSONL을 여기에 넣는다. Train에만 더해지고 Val/Test 장소의 리뷰는 자동으로 빠진다.
+  extra_train_paths: []
+  max_samples: null         # 스모크 실행용: split마다 앞에서 N건
+
+split:                      # prepare_split.py가 쓴다
+  version: gold_split_v1
+  ratios: {train: 0.8, validation: 0.1, test: 0.1}
+  large_place_min_reviews: 30   # 리뷰가 이만큼 이상인 장소는 Train에 고정한다
+
+prompt:
+  system_template: training/prompts/system.txt
+  user_template: training/prompts/user.txt
+  # apply_chat_template에 넘길 값. Gemma4 chat template은 enable_thinking을 받는다 (HF 모델 카드).
+  # 추출 작업이라 생각(thinking) 출력은 끈다. 학습 · 평가가 같은 값을 쓴다.
+  chat_template_kwargs:
+    enable_thinking: false
+
+output:
+  artifacts_root: training/artifacts     # Git 제외. 저장소 밖 경로도 된다 (--artifacts-root)
+  experiments_root: training/experiments # Git 관리. config · metrics · summary
+
+inference:
+  max_new_tokens: 768       # Gold 라벨 JSON의 최대 길이는 629자
+  batch_size: 8
+
+precision: auto             # auto | bf16 | fp16 | fp32 (auto: bf16 지원 GPU면 bf16, 아니면 fp16)

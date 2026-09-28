@@ -1,0 +1,5 @@
+# Base 모델 기준선. 학습 없이 같은 prompt · 같은 Gold Test · 같은 디코딩으로 평가한다.
+defaults: common.yaml
+
+experiment_name: base
+method: base

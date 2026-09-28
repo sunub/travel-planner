@@ -1,0 +1,17 @@
+# QLoRA · Gold Only. base 모델을 bitsandbytes 4bit NF4로 올리고 LoRA 어댑터를 학습한다.
+defaults: sft_common.yaml
+
+experiment_name: qlora_gold
+method: qlora
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: auto   # auto: bf16 지원 GPU면 bf16, 아니면 fp16
+  # peft.prepare_model_for_kbit_training은 양자화되지 않은 파라미터를 fp32로 올린다.
+  # Gemma4 E4B는 per-layer embedding 표가 커서 fp32로 올리면 VRAM이 크게 늘어 기본으로 끈다.
+  prepare_for_kbit_training: false
+
+training:
+  optim: paged_adamw_8bit        # optimizer state를 8bit + CPU 페이징으로 줄인다

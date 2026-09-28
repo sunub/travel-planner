@@ -16,3 +16,29 @@ wheels/
 # 팀원별 원본(in)과 생성 결과(out). 커밋하지 않는다
 datas/*/in/
 datas/*/out/
+datas/*/before_label/
+
+# 모델 학습 산출물. 코드 · 설정 · metrics · split manifest만 커밋한다
+artifacts/
+checkpoints/
+checkpoint-*/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+optimizer.pt
+scheduler.pt
+wandb/
+mlruns/
+.cache/
+hf_cache/
+.hf_cache/
+huggingface/
+.triton/
+torch_compile_debug/
+*.nsys-rep
+*.qdrep
+*.nvvp
+.pytest_cache/
