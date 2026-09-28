@@ -34,7 +34,8 @@ DEFAULT_OUT_PATH = OUT_DIR / "generated" / "reviews.jsonl"
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 DEFAULT_MODEL = "gemma4:e4b"
-MAX_GENERATION_ATTEMPTS = 3  # 영어 라벨 이름이 섞이면 다시 시도 (첫 시도 + 최대 2회 재시도)
+# 영어 라벨 이름이 섞이거나 추측 표현이 나오면 다시 시도한다 (첫 시도 + 최대 2회 재시도, 두 검사 합산).
+MAX_GENERATION_ATTEMPTS = 3
 
 CATEGORY_RATIOS = {"hotel": 0.3, "restaurant": 0.4, "attraction": 0.3}
 
@@ -46,14 +47,6 @@ EXPRESSION_STYLES = {
     "expectation_gap": 0.10,
     "irony": 0.05,
 }
-EXPRESSION_HINTS_KO = {
-    "direct": "생각을 있는 그대로 직접 말합니다.",
-    "concession": "\"~긴 한데\"처럼 한 번 인정하고 나서 자기 의견을 말합니다.",
-    "negation": "부정문으로 표현합니다. 예: \"별로 안 시끄러웠어요\"",
-    "comparison": "다른 곳이나 기대와 비교하는 표현을 씁니다. 예: \"옆집보다 양이 많아요\"",
-    "expectation_gap": "기대했던 것과 실제가 어떻게 달랐는지를 표현합니다. 예: \"생각보다 방이 넓었어요\"",
-    "irony": "반어법을 씁니다. 실제로는 불만이면서 겉으로는 칭찬하는 척 말합니다. 예: \"참 친절하시더라고요\"",
-}
 
 TONE_STYLES = ("polite_yo", "banmal", "short_memo")
 TONE_HINTS_KO = {
@@ -64,6 +57,166 @@ TONE_HINTS_KO = {
 
 TRAVELER_CONTEXT_LIST = sorted(TRAVELER_CONTEXTS)
 
+# aspect별 attribute 값이 실제로 어떤 한국어 표현으로 나타나는지 예시를 준다.
+# "보통"을 "느림"으로 쓰는 식의 혼동(2번 요구사항)을 막기 위해 aspect마다 따로 둔다
+# (예: parking_availability의 unavailable과 amenities의 unavailable은 뜻이 다르다).
+ASPECT_VALUE_EXAMPLES_KO: dict[str, dict[str, str]] = {
+    "cleanliness": {
+        "clean": "깨끗했어요, 청소가 잘 되어 있었어요",
+        "average": "청결은 보통이었어요, 그럭저럭 깨끗했어요",
+        "dirty": "지저분했어요, 청소 상태가 안 좋았어요",
+    },
+    "noise_level": {
+        "quiet": "조용했어요, 소음이 없었어요",
+        "moderate": "소음은 보통이었어요, 크게 거슬리지 않았어요",
+        "noisy": "시끄러웠어요, 소음이 심했어요",
+    },
+    "bed_comfort": {
+        "comfortable": "침대가 편안했어요, 푹 잘 잤어요",
+        "average": "침대는 무난했어요, 그냥저냥 잘 만했어요",
+        "uncomfortable": "침대가 불편했어요, 잠자리가 편하지 않았어요",
+    },
+    "room_size": {
+        "spacious": "방이 넓었어요, 공간이 여유로웠어요",
+        "average": "방 크기는 보통이었어요, 넓지도 좁지도 않았어요",
+        "cramped": "방이 좁았어요, 답답했어요",
+    },
+    "bathroom_quality": {
+        "good": "수압이 좋았어요, 욕실 상태가 좋았어요",
+        "average": "욕실은 무난했어요, 수압이 그냥 보통이었어요",
+        "poor": "수압이 약했어요, 욕실 상태가 안 좋았어요",
+    },
+    "room_condition": {
+        "well_kept": "시설 관리가 잘 되어 있었어요, 방이 깔끔하게 관리되고 있었어요",
+        "average": "시설 상태는 보통이었어요, 낡지도 새것 같지도 않았어요",
+        "worn": "시설이 낡았어요, 오래된 티가 났어요",
+    },
+    "view_quality": {
+        "good": "전망이 좋았어요, 창밖 풍경이 멋있었어요",
+        "average": "전망은 그냥 그랬어요, 특별한 건 없었어요",
+        "poor": "전망이 안 좋았어요, 창밖에 볼 게 없었어요",
+    },
+    "staff_service": {
+        "friendly": "직원분들이 친절했어요, 응대가 좋았어요",
+        "average": "응대는 무난했어요, 특별히 친절하지도 불친절하지도 않았어요",
+        "unfriendly": "직원이 불친절했어요, 응대가 무뚝뚝했어요",
+    },
+    "breakfast_quality": {
+        "good": "조식이 맛있었어요, 조식 구성이 좋았어요",
+        "average": "조식은 그냥 무난했어요, 평범했어요",
+        "poor": "조식이 별로였어요, 조식 맛이 아쉬웠어요",
+    },
+    "amenities": {
+        "available": "부대시설이 잘 갖춰져 있었어요, 수영장이나 헬스장이 있었어요",
+        "unavailable": "부대시설이 따로 없었어요, 편의시설이 부족했어요",
+    },
+    "parking_availability": {
+        "available": "주차장이 있었어요, 주차가 가능했어요",
+        "limited": "주차 자리가 몇 개 없었어요, 주차 공간이 제한적이었어요",
+        "unavailable": "주차장이 없었어요, 주차를 못 했어요",
+    },
+    "parking_experience": {
+        "easy": "주차가 쉬웠어요, 자리 찾기가 편했어요",
+        "average": "주차는 그냥 무난했어요, 특별히 어렵지 않았어요",
+        "difficult": "주차가 어려웠어요, 자리 찾기 힘들었어요",
+    },
+    "food_quality": {
+        "good": "맛있었어요, 음식 맛이 좋았어요",
+        "average": "맛은 무난했어요, 그냥 먹을 만했어요",
+        "poor": "맛이 별로였어요, 입맛에 안 맞았어요",
+    },
+    "freshness": {
+        "fresh": "재료가 신선했어요, 신선도가 좋았어요",
+        "average": "신선도는 보통이었어요, 특별히 신선하지도 않았어요",
+        "not_fresh": "재료가 신선하지 않았어요, 신선도가 떨어졌어요",
+    },
+    "portion": {
+        "large": "양이 많았어요, 푸짐했어요",
+        "normal": "양은 적당했어요, 보통이었어요",
+        "small": "양이 적었어요, 부족했어요",
+    },
+    "waiting_time": {
+        "none": "웨이팅 없이 바로 들어갔어요, 기다리지 않았어요",
+        "short": "웨이팅이 짧았어요, 잠깐 기다렸어요",
+        "long": "웨이팅이 길었어요, 한참을 기다렸어요",
+    },
+    "serving_speed": {
+        "fast": "음식이 빨리 나왔어요, 서빙이 빨랐어요",
+        "average": "음식 나오는 속도는 보통이었어요, 그냥 무난했어요",
+        "slow": "음식이 늦게 나왔어요, 서빙이 느렸어요, 오래 걸렸어요",
+    },
+    "atmosphere": {
+        "good": "분위기가 좋았어요, 인테리어가 예뻤어요",
+        "average": "분위기는 무난했어요, 평범했어요",
+        "poor": "분위기가 별로였어요, 아쉬웠어요",
+    },
+    "seating_comfort": {
+        "comfortable": "좌석이 편안했어요, 앉아 있기 편했어요",
+        "average": "좌석은 보통이었어요, 그냥저냥 앉을 만했어요",
+        "uncomfortable": "좌석이 불편했어요, 앉아 있기 힘들었어요",
+    },
+    "family_friendly": {
+        "suitable": "아이 의자가 있었어요, 가족 손님이 많았어요, 아이 데리고 가기 좋아 보였어요",
+        "unsuitable": "아이와 함께 가기엔 불편해 보였어요, 아이 의자가 없었어요",
+    },
+    "scenery": {
+        "sea": "바다가 보였어요, 바다 전망이었어요",
+        "mountain": "산이 보였어요, 산 경치였어요",
+        "city": "도시 풍경이 보였어요, 시내가 내려다보였어요",
+        "river": "강이 보였어요, 강변 풍경이었어요",
+        "night_view": "야경이 예뻤어요, 밤에 보는 경치가 좋았어요",
+    },
+    "photo_spots": {
+        "good": "사진 찍기 좋았어요, 포토스팟이 많았어요",
+        "average": "사진은 그냥 무난하게 나왔어요, 특별한 포토스팟은 없었어요",
+        "poor": "사진 찍을 만한 곳이 마땅치 않았어요",
+    },
+    "walking_burden": {
+        "low": "많이 걷지 않아도 됐어요, 걷기 부담이 적었어요",
+        "medium": "적당히 걸었어요, 걷기 부담은 보통이었어요",
+        "high": "많이 걸어야 했어요, 걷기 부담이 컸어요",
+    },
+    "slope_stairs": {
+        "low": "오르막이나 계단이 거의 없었어요, 평지라 편했어요",
+        "medium": "계단이 좀 있었어요, 오르내림이 적당히 있었어요",
+        "high": "계단이 많았어요, 오르막이 심했어요",
+    },
+    "activity_variety": {
+        "many": "볼거리가 많았어요, 즐길 거리가 다양했어요",
+        "average": "볼거리는 보통이었어요, 딱히 많지도 적지도 않았어요",
+        "few": "볼거리가 별로 없었어요, 즐길 거리가 적었어요",
+    },
+    "stay_duration": {
+        "short": "잠깐 들르기 좋았어요, 금방 다 봤어요",
+        "medium": "한두 시간 정도 걸렸어요, 둘러보는 데 적당한 시간이 걸렸어요",
+        "long": "반나절은 걸렸어요, 다 보려니 시간이 오래 걸렸어요",
+    },
+    "rest_facilities": {
+        "sufficient": "쉴 곳이 충분했어요, 벤치나 정자가 있었어요",
+        "lacking": "쉴 곳이 마땅치 않았어요, 휴식 공간이 부족했어요",
+    },
+    "toilet_facilities": {
+        "sufficient": "화장실이 잘 갖춰져 있었어요, 화장실 찾기 편했어요",
+        "lacking": "화장실이 부족했어요, 화장실 찾기 힘들었어요",
+    },
+    "weather_sensitivity": {
+        "high": "야외라 날씨 영향을 많이 받았어요, 비 오면 가기 힘들 것 같았어요",
+        "low": "실내라 날씨 상관없이 다닐 수 있었어요, 비가 와도 문제없었어요",
+    },
+}
+# ATTRIBUTES에 있는 모든 aspect/attribute 조합에 예시가 있는지 import 시점에 확인한다.
+for _category, _aspect_map in ATTRIBUTES.items():
+    for _aspect, _values in _aspect_map.items():
+        for _value in _values:
+            if _value not in ASPECT_VALUE_EXAMPLES_KO.get(_aspect, {}):
+                raise ValueError(f"예시 문구가 없는 aspect/attribute: {_aspect}/{_value}")
+
+# 어떤 aspect로도 나타낼 수 없어 항상 금지해야 하는 평가 주제.
+ALWAYS_FORBIDDEN_TOPICS_KO = ["가격", "재방문 의사"]
+# 계획에 해당 aspect가 없을 때만 금지해야 하는 평가 주제.
+CONDITIONAL_TOPIC_TO_ASPECT_KO = {"맛": "food_quality", "분위기": "atmosphere"}
+
+# 리뷰에 남으면 안 되는 영어 라벨 이름 (aspect 코드, attribute 값, traveler_context 코드, sentiment).
 FORBIDDEN_TOKENS = (
     list(ASPECT_NAMES_KO.keys())
     + [attr for cat_attrs in ATTRIBUTES.values() for attrs in cat_attrs.values() for attr in attrs]
@@ -72,6 +225,10 @@ FORBIDDEN_TOKENS = (
 )
 # 한글 사이에 낀 영어 토큰은 \b 경계가 한글을 \w로 취급해 깨질 수 있어 경계 없이 검사한다.
 FORBIDDEN_RE = re.compile("(" + "|".join(re.escape(t) for t in FORBIDDEN_TOKENS) + ")", re.IGNORECASE)
+
+# 추측·전언 표현 (직접 겪은 사실이 아님을 암시) — 5번 요구사항.
+SPECULATIVE_TOKENS = ["것 같", "걱정", "듯"]
+SPECULATIVE_RE = re.compile("(" + "|".join(re.escape(t) for t in SPECULATIVE_TOKENS) + ")")
 
 REVIEW_FORMAT_SCHEMA = {
     "type": "object",
@@ -180,15 +337,69 @@ def plan_review(rng: Random, place: dict, split: dict[str, str]) -> dict[str, An
     }
 
 
-def aspect_line_ko(category: str, item: dict) -> str:
+def aspect_line_ko(item: dict, plan: dict[str, Any]) -> str:
     aspect_ko = ASPECT_NAMES_KO[item["aspect"]]
     value_ko = VALUE_NAMES_KO[item["attribute"]]
+    example = ASPECT_VALUE_EXAMPLES_KO[item["aspect"]][item["attribute"]]
+
     if item["mismatched_tone"]:
-        return (
-            f"- {aspect_ko}: 상태는 '{value_ko}'이지만, 그 상태에 대한 화자의 평가는 상태와 어긋나게 표현합니다"
+        line = (
+            f"- {aspect_ko}: 상태는 '{value_ko}'({example})이지만, 그 상태에 대한 화자의 평가는 상태와 어긋나게 표현합니다"
             f"(예: 웨이팅이 길었지만 기다릴 만했다처럼, 상태를 부정적으로 말하면서 평가는 긍정적으로, 또는 그 반대로)."
         )
-    return f"- {aspect_ko}: '{value_ko}'"
+    else:
+        line = f"- {aspect_ko}: '{value_ko}' (표현 예: {example})"
+
+    if item["aspect"] == "family_friendly" and "family_with_kids" not in plan["traveler_context"]:
+        line += " 화자가 직접 아이를 데려간 것처럼 쓰지 말고, 아이 의자나 다른 가족 손님을 본 것 같은 관찰한 사실로 씁니다."
+    return line
+
+
+def expression_instruction_ko(plan: dict[str, Any]) -> str:
+    style = plan["expression"]
+    aspect_names = [ASPECT_NAMES_KO[a["aspect"]] for a in plan["aspects"]]
+
+    if style == "direct":
+        return "생각을 있는 그대로 직접 말합니다. 예: \"방이 넓고 좋았어요.\""
+
+    if style == "negation":
+        target = f" ({aspect_names[0]} 등)" if aspect_names else ""
+        return (
+            f"계획에 있는 항목 중 최소 하나{target}를 부정문으로 표현합니다. "
+            "예: \"별로 안 시끄러웠어요\", \"주차가 어렵지 않았어요\""
+        )
+
+    if style == "concession":
+        if len(aspect_names) >= 2:
+            a, b = aspect_names[0], aspect_names[1]
+            return (
+                f"\"~긴 한데 ~\" 형태로 두 항목을 대조합니다. {a}은(는) 아쉬운 점으로 인정하고, "
+                f"{b}은(는) 그래도 좋았던 점으로 말합니다. 예: \"방은 좀 좁긴 한데 전망은 정말 좋았어요.\""
+            )
+        return (
+            "\"~긴 한데 ~\" 형태로, 그 항목의 상태와 그에 대한 화자의 느낌을 대조해서 씁니다. "
+            "예: \"웨이팅이 길긴 한데 기다릴 만했어요.\""
+        )
+
+    if style == "comparison":
+        return "다른 곳과 비교하는 표현을 씁니다. 예: \"다른 호텔보다 조용했어요.\""
+
+    if style == "expectation_gap":
+        return "기대했던 것과 실제 경험이 어떻게 달랐는지 대조해서 씁니다. 예: \"생각보다 방이 넓었어요.\""
+
+    return (  # irony
+        "반어법을 씁니다. 실제로는 불만이지만 겉으로는 칭찬하듯 말합니다. "
+        "예: \"웨이팅 1시간이라니 정말 최고네요^^\""
+    )
+
+
+def forbidden_topics_ko(plan: dict[str, Any]) -> list[str]:
+    planned_aspects = {a["aspect"] for a in plan["aspects"]}
+    topics = list(ALWAYS_FORBIDDEN_TOPICS_KO)
+    for topic, aspect in CONDITIONAL_TOPIC_TO_ASPECT_KO.items():
+        if aspect not in planned_aspects:
+            topics.append(topic)
+    return topics
 
 
 def build_prompt(place: dict, plan: dict[str, Any]) -> str:
@@ -211,17 +422,21 @@ def build_prompt(place: dict, plan: dict[str, Any]) -> str:
         lines.append("- 동행이 누구인지는 언급하지 않습니다.")
 
     for item in plan["aspects"]:
-        lines.append(aspect_line_ko(plan["category"], item))
+        lines.append(aspect_line_ko(item, plan))
 
     lines += [
         "",
-        f"표현 방식: {EXPRESSION_HINTS_KO[plan['expression']]}",
+        f"표현 방식: {expression_instruction_ko(plan)}",
         f"말투: {TONE_HINTS_KO[plan['tone']]}",
         f"길이: {plan['sentence_count']}문장.",
         "",
         "규칙:",
         "- 실제 사람이 쓴 후기처럼 자연스럽게 씁니다. 항목을 나열하듯 쓰지 않습니다.",
         "- 위에 나온 상태나 동행을 나타내는 한국어 표현은 자연스러운 문장 속에 녹여 씁니다.",
+        "- 상태값은 위에 적힌 뜻 그대로 씁니다. 예를 들어 '보통'을 '느렸어요'라고 쓰거나, '느림'을 '보통이었어요'라고 쓰면 안 됩니다.",
+        f"- 위 목록에 있는 항목만 평가합니다. {', '.join(forbidden_topics_ko(plan))}처럼 계획에 없는 항목의 좋고 나쁨은 쓰지 않습니다.",
+        "- 장소 이름이나 메뉴 이름은 언급해도 되지만, 그것 자체에 대한 좋고 나쁨 평가는 붙이지 않습니다.",
+        "- 추측이나 걱정하는 투로 쓰지 말고, 직접 겪은 사실처럼 씁니다 (\"~것 같아요\", \"~할까 걱정돼요\" 같은 표현은 쓰지 않습니다).",
         "- 영어 단어나 라벨 이름(예: cleanliness, positive, solo 같은 영어 코드)은 절대 쓰지 않습니다.",
         "- 장소 이름을 리뷰 본문에 그대로 반복하지 않아도 됩니다.",
         "- 다른 설명 없이 리뷰 본문만 씁니다.",
@@ -256,7 +471,7 @@ def generate_review_text(model: str, place: dict, plan: dict[str, Any], rng: Ran
     for _ in range(MAX_GENERATION_ATTEMPTS):
         seed = rng.randrange(2**31)
         last_review = call_ollama(model, prompt, seed)
-        if not FORBIDDEN_RE.search(last_review):
+        if not FORBIDDEN_RE.search(last_review) and not SPECULATIVE_RE.search(last_review):
             return last_review
     return last_review
 
