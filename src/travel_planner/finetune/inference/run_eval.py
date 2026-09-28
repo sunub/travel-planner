@@ -14,7 +14,17 @@ from ..data.pipeline import load_splits
 from ..data.sft import PromptTemplates, build_messages
 from ..evaluation.evaluator import evaluate
 from ..utils import gpu
-from ..utils.tracking import RunPaths, base_metrics, create_run, git_info, open_run, read_json, write_json, write_summary
+from ..utils.tracking import (
+    RunPaths,
+    base_metrics,
+    create_run,
+    git_info,
+    open_run,
+    read_json,
+    save_config,
+    write_json,
+    write_summary,
+)
 
 ADAPTER_METADATA = "tripfit_adapter.json"
 
@@ -96,10 +106,13 @@ def run_evaluation(config: dict, *, adapter_path: Path | None = None, run_name: 
     if run_name:
         run = open_run(config, run_name)
         metrics = read_json(run.experiment_dir / "metrics.json")
+        # 학습 때의 config.yaml은 그대로 두고, 평가에 쓴 설정을 따로 남긴다
+        save_config(config, run.experiment_dir / f"config_{evaluation_key(split)}.yaml")
     else:
         run = create_run(config)
         metrics = base_metrics(config, run, data_info=data_info, git=git_info())
         metrics["precision"] = precision
+        save_config(config, run.experiment_dir / "config.yaml")
     metrics["device"] = gpu.device_info()
 
     print(f"[{run.name}] {split} {len(records)}건 평가 · 모델 {config['model']['name_or_path']} · {config['method']} · {precision}")

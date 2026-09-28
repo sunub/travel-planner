@@ -1,0 +1,36 @@
+# 사후 복원: 이 run은 config.yaml 저장 기능이 생기기 전에 실행됐다.
+# 커밋 734306b의 base_eval.yaml을 다시 읽어 만들었고, metrics.json의 값과 모두 일치함을 확인했다.
+seed: 42
+model:
+  name_or_path: google/gemma-4-E4B-it
+  revision: null
+  attn_implementation: sdpa
+  device_map: null
+data:
+  dataset_path: datas/lkh/out/gold_review.jsonl
+  dataset_version: gold_review_v1
+  split_manifest: training/data/splits/gold_split_v1.json
+  extra_train_paths: []
+  max_samples: null
+split:
+  version: gold_split_v1
+  ratios:
+    train: 0.8
+    validation: 0.1
+    test: 0.1
+  large_place_min_reviews: 30
+prompt:
+  system_template: training/prompts/system.txt
+  user_template: training/prompts/user.txt
+  chat_template_kwargs:
+    enable_thinking: false
+output:
+  artifacts_root: training/artifacts
+  experiments_root: training/experiments
+inference:
+  max_new_tokens: 768
+  batch_size: 8
+precision: auto
+experiment_name: base
+method: base
+config_path: C:\Users\LKH\Desktop\travel_project\travel-planner\training\configs\base_eval.yaml
