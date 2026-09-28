@@ -13,8 +13,10 @@ import itertools
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
+from collections import Counter
 from pathlib import Path
 from random import Random
 from typing import Any
@@ -256,17 +258,58 @@ def load_split() -> dict[str, str]:
         return json.load(f)
 
 
-def load_existing_ids(out_path: Path) -> set[str]:
+def load_existing_records(out_path: Path) -> list[dict]:
     if not out_path.exists():
-        return set()
-    ids = set()
+        return []
+    records = []
     with out_path.open(encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            ids.add(json.loads(line)["review_id"])
-    return ids
+            records.append(json.loads(line))
+    return records
+
+
+def format_duration(seconds: float) -> str:
+    seconds = max(0, int(seconds))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours}시간 {minutes}분"
+    if minutes:
+        return f"{minutes}분 {secs}초"
+    return f"{secs}초"
+
+
+def print_summary(out_path: Path) -> None:
+    records = load_existing_records(out_path)
+    total = len(records)
+    if total == 0:
+        print("요약: 저장된 리뷰가 없습니다.")
+        return
+
+    category_counts = Counter(r["category"] for r in records)
+    split_counts = Counter(r["split"] for r in records)
+    expression_counts = Counter(r["generation"]["expression"] for r in records)
+    place_counts = Counter(r["place_id"] for r in records)
+    per_place = list(place_counts.values())
+
+    print("--- 요약 ---")
+    print(f"전체 리뷰 수: {total}")
+    print(
+        "카테고리별: "
+        + ", ".join(
+            f"{c}={category_counts.get(c, 0)}건 ({category_counts.get(c, 0) / total:.1%})"
+            for c in CATEGORY_RATIOS
+        )
+    )
+    print("split별: " + ", ".join(f"{s}={n}건" for s, n in sorted(split_counts.items())))
+    print(
+        f"장소당 리뷰 수 (장소 {len(per_place)}곳): "
+        f"최소 {min(per_place)}, 평균 {sum(per_place) / len(per_place):.2f}, 최대 {max(per_place)}"
+    )
+    print("표현 방식별: " + ", ".join(f"{e}={n}건" for e, n in sorted(expression_counts.items())))
 
 
 def pick_places(rng: Random, places: dict[str, list[dict]], count: int) -> list[dict]:
@@ -481,20 +524,29 @@ def call_ollama(model: str, prompt: str, seed: int) -> str:
     return json.loads(content)["review"]
 
 
-def generate_review_text(model: str, place: dict, plan: dict[str, Any], rng: Random) -> str:
+def generate_review_text(model: str, place: dict, plan: dict[str, Any], rng: Random) -> tuple[str, int]:
+    """리뷰 본문과, 그걸 만드는 데 걸린 시도 횟수(1이면 재시도 없음)를 함께 돌려준다."""
     prompt = build_prompt(place, plan)
     last_review = ""
-    for _ in range(MAX_GENERATION_ATTEMPTS):
+    for attempt in range(1, MAX_GENERATION_ATTEMPTS + 1):
         seed = rng.randrange(2**31)
         last_review = call_ollama(model, prompt, seed)
         if not FORBIDDEN_RE.search(last_review) and not SPECULATIVE_RE.search(last_review):
-            return last_review
-    return last_review
+            return last_review, attempt
+    return last_review, MAX_GENERATION_ATTEMPTS
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--count", type=int, default=100, help="생성할 리뷰 수 (기본 100)")
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=100,
+        help=(
+            "최종 목표 리뷰 수 (기본 100). 파일에 이미 있는 리뷰까지 합친 개수로, "
+            "이미 있는 만큼은 건너뛰고 모자란 만큼만 새로 생성한다."
+        ),
+    )
     parser.add_argument("--seed", type=int, default=42, help="생성 계획 난수 시드 (기본 42)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Ollama 모델 이름 (기본 {DEFAULT_MODEL})")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_PATH, help="출력 JSONL 경로")
@@ -504,12 +556,23 @@ def main() -> None:
     split = load_split()
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
-    existing_ids = load_existing_ids(args.out)
+    existing_records = load_existing_records(args.out)
+    existing_ids = {r["review_id"] for r in existing_records}
+    category_counts = Counter(r["category"] for r in existing_records)
+    initial_existing = len(existing_ids)
+
+    if initial_existing >= args.count:
+        print(f"이미 {initial_existing}건이 있어 목표 {args.count}건을 채웠습니다. 새로 생성할 것이 없습니다.")
+        print_summary(args.out)
+        return
+
     plan_rng = Random(args.seed)
     chosen_places = pick_places(plan_rng, places, args.count)
 
     made = 0
     skipped = 0
+    retries_total = 0
+    start_time = time.monotonic()
     with args.out.open("a", encoding="utf-8") as f:
         for i, place in enumerate(chosen_places, start=1):
             review_id = f"yay-{i:06d}"
@@ -521,7 +584,8 @@ def main() -> None:
                 continue
 
             gen_rng = Random(f"{args.seed}:{review_id}")
-            review_text = generate_review_text(args.model, place, plan, gen_rng)
+            review_text, attempts = generate_review_text(args.model, place, plan, gen_rng)
+            retries_total += attempts - 1
 
             record = {
                 "review_id": review_id,
@@ -536,9 +600,22 @@ def main() -> None:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             f.flush()
             made += 1
-            print(f"[{i}/{len(chosen_places)}] {review_id} ({place['category']}) 생성 완료")
+            category_counts[place["category"]] += 1
+
+            if made % 10 == 0:
+                completed = initial_existing + made
+                elapsed = time.monotonic() - start_time
+                avg = elapsed / made
+                remaining = max(args.count - completed, 0)
+                eta = format_duration(avg * remaining)
+                cat_str = ", ".join(f"{c}={category_counts[c]}" for c in CATEGORY_RATIOS)
+                print(
+                    f"[진행] {completed}/{args.count} | 카테고리 누적 {cat_str} | "
+                    f"평균 {avg:.2f}초/건 | 예상 남은 시간 {eta} | 누적 재시도 {retries_total}회"
+                )
 
     print(f"완료: 새로 생성 {made}건, 이미 있어서 건너뜀 {skipped}건 → {args.out}")
+    print_summary(args.out)
 
 
 if __name__ == "__main__":
