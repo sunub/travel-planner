@@ -40,12 +40,12 @@ MAX_GENERATION_ATTEMPTS = 3
 CATEGORY_RATIOS = {"hotel": 0.3, "restaurant": 0.4, "attraction": 0.3}
 
 EXPRESSION_STYLES = {
-    "direct": 0.5,
+    "direct": 0.52,
     "concession": 0.15,
     "negation": 0.10,
     "comparison": 0.10,
     "expectation_gap": 0.10,
-    "irony": 0.05,
+    "irony": 0.03,
 }
 
 TONE_STYLES = ("polite_yo", "banmal", "short_memo")
@@ -389,7 +389,8 @@ def expression_instruction_ko(plan: dict[str, Any]) -> str:
 
     return (  # irony
         "반어법을 씁니다. 실제로는 불만이지만 겉으로는 칭찬하듯 말합니다. "
-        "예: \"웨이팅 1시간이라니 정말 최고네요^^\""
+        "예: \"웨이팅 1시간이라니 정말 최고네요^^\", "
+        "\"주차장 찾느라 30분 돌았네요, 덕분에 동네 구경 잘했습니다^^\""
     )
 
 
@@ -400,6 +401,15 @@ def forbidden_topics_ko(plan: dict[str, Any]) -> list[str]:
         if aspect not in planned_aspects:
             topics.append(topic)
     return topics
+
+
+def scenery_rule_ko(plan: dict[str, Any]) -> str | None:
+    """attraction 리뷰에서 경관 감상이 계획 없이 새는 문제(파일럿2에서 3/20 발견)를 막는다."""
+    if plan["category"] != "attraction":
+        return None
+    if any(a["aspect"] == "scenery" for a in plan["aspects"]):
+        return "경관은 계획에 있는 종류(바다/산/도시 등)만 드러내고, 그 외에 경관이 좋았다는 감탄은 덧붙이지 않습니다."
+    return "경관(scenery)은 계획에 없으니, \"바다 뷰가 최고였다\"처럼 경관 자체에 대한 감상은 쓰지 않습니다."
 
 
 def build_prompt(place: dict, plan: dict[str, Any]) -> str:
@@ -431,6 +441,7 @@ def build_prompt(place: dict, plan: dict[str, Any]) -> str:
         f"길이: {plan['sentence_count']}문장.",
         "",
         "규칙:",
+        "- 계획의 모든 항목을 하나도 빠짐없이 리뷰에 넣습니다.",
         "- 실제 사람이 쓴 후기처럼 자연스럽게 씁니다. 항목을 나열하듯 쓰지 않습니다.",
         "- 위에 나온 상태나 동행을 나타내는 한국어 표현은 자연스러운 문장 속에 녹여 씁니다.",
         "- 상태값은 위에 적힌 뜻 그대로 씁니다. 예를 들어 '보통'을 '느렸어요'라고 쓰거나, '느림'을 '보통이었어요'라고 쓰면 안 됩니다.",
@@ -441,6 +452,11 @@ def build_prompt(place: dict, plan: dict[str, Any]) -> str:
         "- 장소 이름을 리뷰 본문에 그대로 반복하지 않아도 됩니다.",
         "- 다른 설명 없이 리뷰 본문만 씁니다.",
     ]
+
+    scenery_rule = scenery_rule_ko(plan)
+    if scenery_rule:
+        lines.append(f"- {scenery_rule}")
+
     return "\n".join(lines)
 
 
