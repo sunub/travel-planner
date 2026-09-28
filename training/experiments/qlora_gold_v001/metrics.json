@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "experiment_name": "qlora_gold",
+  "run_name": "qlora_gold_v001",
+  "timestamp": "2026-09-28T18:59:51+00:00",
+  "git": {
+    "commit": "53a1221b2bdd9afe4d259305ad888694eab2b749",
+    "branch": "lkh_train",
+    "dirty": false
+  },
+  "model_id": "google/gemma-4-E4B-it",
+  "method": "qlora",
+  "seed": 42,
+  "precision": "bf16",
+  "data": {
+    "dataset_path": "datas/lkh/out/gold_review.jsonl",
+    "dataset_version": "gold_review_v1",
+    "dataset_sha256": "9f9ddc1a1040a561a5d12fbc19d7e469e6d53b10a4918a294ddfc4b369fe4a2e",
+    "dataset_matches_split_source": true,
+    "split_manifest": "training/data/splits/gold_split_v1.json",
+    "split_version": "gold_split_v1",
+    "counts": {
+      "train": 917,
+      "validation": 115,
+      "test": 115
+    },
+    "tiers": {
+      "train": [
+        "gold"
+      ],
+      "validation": [
+        "gold"
+      ],
+      "test": [
+        "gold"
+      ]
+    },
+    "extra_train": [],
+    "max_samples": null
+  },
+  "hyperparameters": {
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": ".*language_model.*\\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)$",
+      "bias": "none"
+    },
+    "training": {
+      "learning_rate": 0.0002,
+      "num_train_epochs": 3,
+      "per_device_train_batch_size": 2,
+      "per_device_eval_batch_size": 2,
+      "gradient_accumulation_steps": 8,
+      "max_length": 2048,
+      "warmup_steps": 0.03,
+      "weight_decay": 0.0,
+      "lr_scheduler_type": "cosine",
+      "max_grad_norm": 1.0,
+      "optim": "paged_adamw_8bit",
+      "gradient_checkpointing": true,
+      "logging_steps": 10,
+      "eval_strategy": "epoch",
+      "save_strategy": "epoch",
+      "save_total_limit": 2,
+      "report_to": "none",
+      "extra_args": {}
+    },
+    "quantization": {
+      "load_in_4bit": true,
+      "bnb_4bit_quant_type": "nf4",
+      "bnb_4bit_use_double_quant": true,
+      "bnb_4bit_compute_dtype": "auto",
+      "prepare_for_kbit_training": false
+    }
+  },
+  "training": {
+    "final_train_loss": 0.012271515280008315,
+    "mean_train_loss": 0.030765303100148838,
+    "eval_loss": 0.03740270063281059,
+    "best_eval_loss": 0.03528900444507599,
+    "duration_sec": 5018.1,
+    "global_steps": 174,
+    "peak_vram_allocated_gb": 10.716,
+    "peak_vram_reserved_gb": 10.951,
+    "adapter_size_mb": 66.61,
+    "lora_modules": 258,
+    "trainable_params": 34881536,
+    "total_params": 5758539040,
+    "token_lengths": {
+      "max_tokens": 1258,
+      "mean_tokens": 807.1,
+      "over_max_length": 0
+    },
+    "adapter_path": "C:\\Users\\LKH\\Desktop\\travel_project\\travel-planner\\training\\artifacts\\qlora_gold_v001\\adapter"
+  },
+  "evaluation": {
+    "split": "test",
+    "num_samples": 115,
+    "adapter_path": "C:\\Users\\LKH\\Desktop\\travel_project\\travel-planner\\training\\artifacts\\qlora_gold_v001\\adapter",
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 768,
+      "batch_size": 8
+    },
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "overall": {
+      "json_parse_rate": 1.0,
+      "schema_valid_rate": 1.0,
+      "json_valid_rate": 0.991304347826087,
+      "invalid_value_count": 1,
+      "invalid_value_rate": 0.00625,
+      "reviews": 115,
+      "gold_aspects": 164,
+      "pred_aspects": 160,
+      "matched_aspects": 150,
+      "aspect_precision": 0.9375,
+      "aspect_recall": 0.9146341463414634,
+      "aspect_f1": 0.925925925925926,
+      "aspect_macro_f1": 0.7842400737970979,
+      "aspect_set_f1": 0.9287925696594428,
+      "attribute_accuracy": 0.9933333333333333,
+      "sentiment_accuracy": 0.9666666666666667,
+      "sentiment_macro_f1": 0.8133856551122737,
+      "evidence_in_source_rate": 1.0,
+      "evidence_exact_match": 0.7866666666666666,
+      "evidence_overlap_f1": 0.9252451549730318,
+      "traveler_context_f1": 0.6666666666666666,
+      "exact_review_match": 0.5739130434782609,
+      "empty_review_accuracy": 1.0
+    },
+    "by_category": {
+      "attraction": {
+        "json_parse_rate": 1.0,
+        "schema_valid_rate": 1.0,
+        "json_valid_rate": 1.0,
+        "invalid_value_count": 0,
+        "invalid_value_rate": 0.0,
+        "reviews": 38,
+        "gold_aspects": 43,
+        "pred_aspects": 39,
+        "matched_aspects": 37,
+        "aspect_precision": 0.9487179487179487,
+        "aspect_recall": 0.8604651162790697,
+        "aspect_f1": 0.9024390243902439,
+        "aspect_macro_f1": 0.7379040946403376,
+        "aspect_set_f1": 0.9024390243902439,
+        "attribute_accuracy": 1.0,
+        "sentiment_accuracy": 0.918918918918919,
+        "sentiment_macro_f1": 0.7850746268656716,
+        "evidence_in_source_rate": 1.0,
+        "evidence_exact_match": 0.7567567567567568,
+        "evidence_overlap_f1": 0.9382592737555537,
+        "traveler_context_f1": 0.0,
+        "exact_review_match": 0.5,
+        "empty_review_accuracy": 1.0
+      },
+      "hotel": {
+        "json_parse_rate": 1.0,
+        "schema_valid_rate": 1.0,
+        "json_valid_rate": 0.9736842105263158,
+        "invalid_value_count": 1,
+        "invalid_value_rate": 0.016129032258064516,
+        "reviews": 38,
+        "gold_aspects": 60,
+        "pred_aspects": 62,
+        "matched_aspects": 58,
+        "aspect_precision": 0.9354838709677419,
+        "aspect_recall": 0.9666666666666667,
+        "aspect_f1": 0.9508196721311476,
+        "aspect_macro_f1": 0.9158585858585859,
+        "aspect_set_f1": 0.9508196721311476,
+        "attribute_accuracy": 0.9827586206896551,
+        "sentiment_accuracy": 1.0,
+        "sentiment_macro_f1": 1.0,
+        "evidence_in_source_rate": 1.0,
+        "evidence_exact_match": 0.8275862068965517,
+        "evidence_overlap_f1": 0.9452837975347206,
+        "traveler_context_f1": 1.0,
+        "exact_review_match": 0.6842105263157895,
+        "empty_review_accuracy": 1.0
+      },
+      "restaurant": {
+        "json_parse_rate": 1.0,
+        "schema_valid_rate": 1.0,
+        "json_valid_rate": 1.0,
+        "invalid_value_count": 0,
+        "invalid_value_rate": 0.0,
+        "reviews": 39,
+        "gold_aspects": 61,
+        "pred_aspects": 59,
+        "matched_aspects": 55,
+        "aspect_precision": 0.9322033898305084,
+        "aspect_recall": 0.9016393442622951,
+        "aspect_f1": 0.9166666666666666,
+        "aspect_macro_f1": 0.7015873015873016,
+        "aspect_set_f1": 0.9243697478991596,
+        "attribute_accuracy": 1.0,
+        "sentiment_accuracy": 0.9636363636363636,
+        "sentiment_macro_f1": 0.49682539682539684,
+        "evidence_in_source_rate": 1.0,
+        "evidence_exact_match": 0.7636363636363637,
+        "evidence_overlap_f1": 0.8953585429088273,
+        "traveler_context_f1": null,
+        "exact_review_match": 0.5384615384615384,
+        "empty_review_accuracy": null
+      }
+    },
+    "inference": {
+      "duration_sec": 228.2,
+      "sec_per_review": 1.984,
+      "generated_tokens": 6715,
+      "tokens_per_sec": 29.43,
+      "peak_vram_allocated_gb": 10.22,
+      "peak_vram_reserved_gb": 12.023
+    },
+    "predictions_path": "C:\\Users\\LKH\\Desktop\\travel_project\\travel-planner\\training\\artifacts\\qlora_gold_v001\\predictions\\test.jsonl"
+  },
+  "device": {
+    "torch": "2.14.0+cu126",
+    "cuda_available": true,
+    "cuda": "12.6",
+    "device": "NVIDIA GeForce RTX 3060",
+    "total_vram_gb": 12.0,
+    "bf16_supported": true
+  }
+}
