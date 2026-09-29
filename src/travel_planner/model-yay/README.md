@@ -18,6 +18,19 @@
 | `evaluate.py` | Base/QLoRA를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
 | `requirements.txt` | 이 폴더 전용 의존성 |
 
+## 의존성 버전
+
+`requirements.txt`는 `transformers==5.17.0` / `trl==1.14.0` / `peft==0.21.0` / `bitsandbytes==0.50.2` /
+`accelerate==1.15.0`으로 고정되어 있다. EXAONE-3.5의 `trust_remote_code` 코드가 2026-02-06 커밋부터
+`transformers.modeling_rope_utils.RopeParameters`(transformers 5의 rope 리팩터에서 생긴 심볼)를 써서,
+transformers 4.x에서는 `ImportError: cannot import name 'RopeParameters'`가 난다. 이 다섯 패키지는
+서로 맞물려 있어 하나만 올리면 다시 깨질 수 있다 — 팀원 브랜치(`origin/lkh_train`)가 Gemma4 QLoRA
+학습에 이미 검증해 둔 조합을 그대로 가져왔다 (`training/README.md`의 uv.lock 버전).
+
+transformers 5는 `TrainingArguments.warmup_ratio`를 없애고 `warmup_steps`가 1 미만 실수면 비율로
+취급하도록 바꿨다. `config.yaml`의 `training.warmup_steps: 0.03`과 `train.py`의 `build_sft_config`가
+이 규칙을 따른다.
+
 ## 데이터셋
 
 `config.yaml`의 `data.{train_path,validation_path,test_path}`는 팀 공통 데이터셋

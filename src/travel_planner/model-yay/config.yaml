@@ -36,7 +36,7 @@ training:
   gradient_accumulation_steps: 16 # 유효 배치 = 1 x 16 = 16
   max_seq_length: 2048 # 이보다 긴 예제가 있으면 학습 전에 멈춘다
   lr_scheduler_type: cosine
-  warmup_ratio: 0.03
+  warmup_steps: 0.03 # 1 미만이면 전체 step 대비 비율로 취급된다 (transformers 5 규칙. warmup_ratio는 제거됨)
   weight_decay: 0.0
   max_grad_norm: 1.0
   optim: paged_adamw_8bit

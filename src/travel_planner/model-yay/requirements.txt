@@ -1,12 +1,22 @@
-# EXAONE-3.5-7.8B-Instruct는 trust_remote_code=True로 커스텀 모델링 코드를 함께 받는다.
-# 모델 카드(https://huggingface.co/LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct) 기준 transformers>=4.43이 필요하다.
-# 커스텀 코드가 transformers 5.x의 변경 사항과 맞는지 확인되지 않았으므로 4.x대로 고정한다.
+# EXAONE-3.5-7.8B-Instruct는 trust_remote_code=True로 커스텀 모델링 코드(configuration_exaone.py)를
+# 함께 받는다. 이 코드가 2026-02-06 커밋(553ea25, "Update README.md and config.json for Transformers v5")
+# 부터 `from transformers.modeling_rope_utils import RopeParameters`를 쓰는데, 이 심볼은 transformers 5.x의
+# rope 리팩터에서 새로 생긴 것이라 4.x에는 없다 (ImportError: cannot import name 'RopeParameters').
+# revision을 v5 이전 커밋(0ff6b5ec7c13b049b253a16a889aa269e6b79a94)으로 고정하는 대신, transformers 5로
+# 올리는 쪽을 택했다: 팀원 브랜치(origin/lkh_train)가 Gemma4 QLoRA 학습에 이미 이 조합을 쓰고 있어
+# (training/README.md의 uv.lock 버전), 검증된 조합을 그대로 재사용할 수 있었다. peft/trl/bitsandbytes/
+# accelerate도 같은 세트로 맞춘다 (전부 같이 올리거나 같이 내려야 한다. 하나만 바꾸면 다시 깨질 수 있다).
+#
+# transformers 5의 주요 변경 중 이 코드에 실제로 영향을 준 것: TrainingArguments의 warmup_ratio가
+# 제거되고 warmup_steps가 1 미만 실수면 비율로 취급하도록 바뀌었다 (config.yaml의 training.warmup_steps,
+# train.py의 build_sft_config 참고).
+#
 # 실제 설치 전에 팀 GPU 환경(CUDA 버전)에 맞는 torch를 먼저 설치하는 것을 권장한다.
 torch>=2.14.0
-transformers>=4.43,<5.0
-peft>=0.11.0
-trl>=0.9.0
-bitsandbytes>=0.43.0
-accelerate>=0.31.0
+transformers==5.17.0
+peft==0.21.0
+trl==1.14.0
+bitsandbytes==0.50.2
+accelerate==1.15.0
 pyyaml>=6.0
 python-dotenv>=1.0.0

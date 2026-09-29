@@ -144,7 +144,7 @@ def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool, m
         per_device_eval_batch_size=t.get("per_device_eval_batch_size", t["per_device_train_batch_size"]),
         gradient_accumulation_steps=t["gradient_accumulation_steps"],
         max_length=t["max_seq_length"],
-        warmup_ratio=t["warmup_ratio"],
+        warmup_steps=t["warmup_steps"],  # transformers 5: warmup_ratio가 제거됨. 1 미만 실수는 비율로 취급된다
         weight_decay=t.get("weight_decay", 0.0),
         lr_scheduler_type=t["lr_scheduler_type"],
         max_grad_norm=t.get("max_grad_norm", 1.0),
