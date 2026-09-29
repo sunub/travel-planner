@@ -52,6 +52,7 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
             "mode": mode,
             "adapter_path": adapter_path,
             "max_new_tokens": int(model.get("max_new_tokens", 384)),
+            "load_in_4bit": bool(model.get("load_in_4bit", False)),
         })
     gold = config.get("gold")
     if not isinstance(gold, str) or not gold.strip():
@@ -130,6 +131,7 @@ def run_model(model_config: dict[str, Any], gold_path: Path, output_path: Path) 
         output_file=temporary_path,
         adapter_path=model_config.get("adapter_path"),
         max_new_tokens=model_config["max_new_tokens"],
+        load_in_4bit=model_config["load_in_4bit"],
     )
     rows = [normalize_prediction_record(row, model_config["name"]) for row in read_jsonl(temporary_path)]
     write_jsonl(output_path, rows)

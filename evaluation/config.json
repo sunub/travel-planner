@@ -2,6 +2,13 @@
   "gold": "../datasets/test.jsonl",
   "models": [
     {
+      "name": "exaone_2_4b_base",
+      "model_id": "LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct",
+      "mode": "base",
+      "load_in_4bit": true,
+      "max_new_tokens": 384
+    },
+    {
       "name": "exaone_2_4b_qlora",
       "model_id": "LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct",
       "mode": "qlora",
