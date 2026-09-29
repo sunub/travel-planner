@@ -133,7 +133,8 @@ def evaluate_records(gold: dict[str, dict], predictions: dict[str, dict]) -> dic
         pred_record = predictions.get(review_id)
         if not pred_record or not isinstance(pred_record.get("label"), dict):
             continue
-        valid_json += 1
+        # 파싱에 실패하면 파이프라인이 빈 라벨로 바꿔 넣으므로, json_valid 표시로 실제 성공만 센다.
+        valid_json += bool(pred_record.get("json_valid", True))
         gold_label = _label(gold_record)
         pred_label = _label(pred_record)
         if _schema_valid(pred_record, str(gold_record.get("category", ""))):
