@@ -1,0 +1,11 @@
+# 4bit Base 기준선. base_eval.yaml과 같고 base 모델만 QLoRA와 같은 4bit NF4로 불러온다 (학습 없음).
+# 16bit Base vs 4bit Base = 양자화만의 영향, 4bit Base vs QLoRA = 학습만의 영향.
+defaults: base_eval.yaml
+
+experiment_name: base4bit
+
+quantization:                    # qlora_gold_v1.yaml과 같은 값
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: auto   # auto: bf16 지원 GPU면 bf16, 아니면 fp16

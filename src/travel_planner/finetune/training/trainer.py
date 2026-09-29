@@ -93,6 +93,31 @@ def save_adapter(trainer, config: dict, run: RunPaths, precision: str, data_info
     })  # fmt: skip
 
 
+def selected_checkpoint(state, args) -> dict:
+    """저장 · 평가한 어댑터가 어느 체크포인트인가. load_best_model_at_end면 Validation 기준 best, 아니면 마지막 step."""
+    if args.load_best_model_at_end and state.best_model_checkpoint:
+        name = Path(state.best_model_checkpoint).name
+        return {"selected_by": args.metric_for_best_model, "selected_checkpoint": name,
+                "selected_step": int(name.rsplit("-", 1)[-1]), "selected_metric": state.best_metric}  # fmt: skip
+    return {"selected_by": "last_step", "selected_checkpoint": None, "selected_step": state.global_step, "selected_metric": None}
+
+
+def restore_adapter_dtypes(model, dtypes: dict) -> int:
+    """학습 전의 어댑터 dtype으로 되돌린다. 바꾼 파라미터 수를 돌려준다.
+
+    load_best_model_at_end는 끝에 best 체크포인트를 model.load_adapter()로 다시 불러오는데, PEFT가 기본값
+    (autocast_adapter_dtype=True)으로 어댑터를 fp32로 올린다. QLoRA 어댑터는 TRL이 bf16으로 학습 · 저장하므로
+    (체크포인트도 bf16), 되돌리지 않으면 저장 어댑터와 Test 평가만 fp32가 된다. bf16 → fp32 → bf16은 값이 그대로다.
+    """
+    changed = 0
+    for name, param in model.named_parameters():
+        dtype = dtypes.get(name)
+        if dtype is not None and param.dtype != dtype:
+            param.data = param.data.to(dtype)
+            changed += 1
+    return changed
+
+
 def last_value(log_history: list[dict], key: str) -> float | None:
     return next((entry[key] for entry in reversed(log_history) if key in entry), None)
 
@@ -161,10 +186,14 @@ def train(config: dict, *, run_name: str | None = None, dry_run: bool = False) -
 
     gpu.reset_peak_memory()
     start = time.perf_counter()
+    adapter_dtypes = {name: p.dtype for name, p in trainer.model.named_parameters() if p.requires_grad}
     train_output = trainer.train()
     duration = time.perf_counter() - start
+    restore_adapter_dtypes(trainer.model, adapter_dtypes)
     peak = gpu.peak_memory_gb()
 
+    selected = selected_checkpoint(trainer.state, trainer.args)
+    print(f"  선택한 체크포인트: {selected['selected_checkpoint'] or '마지막 step'} (step {selected['selected_step']}, 기준 {selected['selected_by']})")
     save_adapter(trainer, config, run, precision, data_info, git)
     final_eval = trainer.evaluate() if has_validation else {}
     log_history = trainer.state.log_history
@@ -181,6 +210,7 @@ def train(config: dict, *, run_name: str | None = None, dry_run: bool = False) -
         "best_eval_loss": min((e["eval_loss"] for e in log_history if "eval_loss" in e), default=None),
         "duration_sec": round(duration, 1),
         "global_steps": trainer.state.global_step,
+        **selected,
         **peak,
         "adapter_size_mb": adapter_size_mb(run.adapter_dir),
         "lora_modules": len(wrapped),

@@ -1,0 +1,25 @@
+# Base 기준선 · 팀 공유 데이터 v2 (busan_review_sft_v1) · Gemma4 E2B. 팀원이 나눠 준 train / validation / test 파일을 그대로 읽는다.
+# 데이터 설명: training/data/README.md "팀 공유 데이터 v2"
+defaults: base_eval.yaml
+
+experiment_name: base_e2b_busan
+
+model:
+  # 팀 노트북(8GB)에서 E4B는 4bit로도 가중치가 9GB를 넘어(per-layer embedding 5.25GB는 4bit로 줄지 않는다) 학습이 OOM으로 멈췄다.
+  # 그래서 v2 실험은 모두 E2B를 쓴다 (2026-09-29 결정). Base · 4bit Base · QLoRA가 같은 모델이어야 비교가 된다.
+  name_or_path: google/gemma-4-E2B-it
+  # E2B도 4bit로 가중치가 약 6.9GB라 8GB에서 첫 step에 OOM이 났다 (2026-09-29). 계산 결과는 그대로 두고 메모리만 줄인다.
+  text_only: true                      # vision/audio 타워를 만들지 않는다 (약 0.9GB)
+  offload_per_layer_embeddings: true   # per-layer embedding 표를 CPU RAM에 둔다 (4.38GB, training/offload.py)
+
+data:
+  dataset_path: null        # split_files를 쓰므로 비운다
+  split_manifest: null
+  dataset_version: busan_review_sft_v1
+  split_files:
+    train: datas/lkh/out/v2/train.jsonl
+    validation: datas/lkh/out/v2/validation.jsonl
+    test: datas/lkh/out/v2/test.jsonl
+
+split:
+  version: busan_review_sft_v1   # 분할은 파일이 정한다 (팀 공유 split.json 기준)

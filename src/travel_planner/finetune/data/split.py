@@ -138,8 +138,11 @@ def check_no_leakage(splits: dict[str, list[dict]]) -> None:
                 raise SplitError(f"{a}와 {b}에 같은 place_id가 있습니다: {sorted(shared)[:5]}")
 
 
-def filter_extra_train(records: list[dict], manifest: dict) -> tuple[list[dict], int]:
-    """추가 학습 데이터(예: Silver)에서 Validation/Test 장소의 리뷰를 뺀다. (남은 레코드, 뺀 수)."""
-    held_out = {pid for pid, split in manifest["assignment"].items() if split != "train"}
+def held_out_places(splits: dict[str, list[dict]]) -> set[str]:
+    return {r["place_id"] for split in HOLDOUT_SPLITS for r in splits[split]}
+
+
+def filter_extra_train(records: list[dict], held_out: set[str]) -> tuple[list[dict], int]:
+    """추가 학습 데이터(예: Silver)에서 Validation/Test 장소(held_out)의 리뷰를 뺀다. (남은 레코드, 뺀 수)."""
     kept = [r for r in records if r["place_id"] not in held_out]
     return kept, len(records) - len(kept)

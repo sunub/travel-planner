@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from ..config import REPO_ROOT, resolve_path
+from ..config import REPO_ROOT, resolve_path, uses_4bit
 
 METRICS_SCHEMA_VERSION = 1
 ADAPTER_WEIGHT_SUFFIXES = (".safetensors", ".bin")
@@ -130,6 +130,8 @@ def base_metrics(config: dict, run: RunPaths, *, data_info: dict, git: dict) -> 
     hyper = None
     if method != "base":
         hyper = {"lora": config["lora"], "training": config["training"], "quantization": config.get("quantization") if method == "qlora" else None}
+    elif uses_4bit(config):  # 4bit Base: 학습은 없고 양자화 설정만 남겨 16bit Base와 구분한다
+        hyper = {"lora": None, "training": None, "quantization": config["quantization"]}
     return {
         "schema_version": METRICS_SCHEMA_VERSION,
         "experiment_name": config["experiment_name"],
@@ -137,6 +139,7 @@ def base_metrics(config: dict, run: RunPaths, *, data_info: dict, git: dict) -> 
         "timestamp": now_iso(),
         "git": git,
         "model_id": config["model"]["name_or_path"],
+        "model_loading": {k: bool(config["model"].get(k, False)) for k in ("text_only", "offload_per_layer_embeddings")},
         "method": method,
         "seed": config["seed"],
         "precision": None,
@@ -159,6 +162,7 @@ def write_summary(metrics: dict, path: Path) -> None:
     lines = [f"# {metrics['run_name']}", "", "| 항목 | 값 |", "| --- | --- |"]
     rows = [
         ("method", metrics["method"]),
+        ("weights", ((metrics.get("hyperparameters") or {}).get("quantization") or {}).get("bnb_4bit_quant_type", "16bit")),
         ("model_id", metrics["model_id"]),
         ("git commit", (metrics["git"].get("commit") or "")[:12] + (" (dirty)" if metrics["git"].get("dirty") else "")),
         ("dataset", f"{metrics['data'].get('dataset_version')} / split {metrics['data'].get('split_version')}"),
@@ -168,6 +172,7 @@ def write_summary(metrics: dict, path: Path) -> None:
     rows += [
         ("final train loss", _fmt(training.get("final_train_loss"))),
         ("eval loss", _fmt(training.get("eval_loss"))),
+        ("selected checkpoint", f"{training.get('selected_checkpoint') or 'last step'} (by {training.get('selected_by')})" if training.get("selected_by") else "-"),
         ("train time (min)", _fmt(training.get("duration_sec") and training["duration_sec"] / 60, 1)),
         ("peak VRAM (GB)", _fmt(training.get("peak_vram_reserved_gb"), 2)),
         ("adapter size (MB)", _fmt(training.get("adapter_size_mb"), 1)),
@@ -176,7 +181,7 @@ def write_summary(metrics: dict, path: Path) -> None:
     rows += [
         (f"[{(metrics.get('evaluation') or {}).get('split', '-')}] {key}", _fmt(overall.get(key)))
         for key in (
-            "json_valid_rate", "aspect_f1", "aspect_macro_f1", "attribute_accuracy", "sentiment_accuracy",
+            "json_valid_rate", "task_success_rate", "aspect_f1", "aspect_macro_f1", "attribute_accuracy", "sentiment_accuracy",
             "evidence_in_source_rate", "evidence_exact_match", "evidence_overlap_f1", "traveler_context_f1",
         )
     ]  # fmt: skip

@@ -18,13 +18,21 @@
   - traveler_context_f1: 리뷰마다 traveler_context 집합을 비교한 micro F1.
   - exact_review_match: aspect 목록(순서 무시)과 traveler_context가 모두 정답과 같은 리뷰 비율.
   - empty_review_accuracy: 정답 aspect가 없는 리뷰에서 예측도 비어 있는 비율 ("없을 때 조용한가").
+  - task_success_rate: 아래 네 조건(task_checks)을 모두 만족한 리뷰 비율. 평가 강의자료의 "성공 = 기준 모두 충족"에 해당한다.
+      format   JSON이 스키마와 허용값을 지킨다 (parser의 strict_valid)
+      aspects  예측 aspect와 정답 aspect가 모두 짝지어진다 (FP · FN 없음)
+      values   짝지어진 모든 aspect의 attribute · sentiment가 정답과 같다
+      evidence 모든 예측 evidence가 원문 구절이고, 짝지어진 쌍의 겹침 F1이 TASK_SUCCESS_MIN_OVERLAP 이상이다
+    traveler_context는 조건에 넣지 않는다 (traveler_context_f1로 따로 본다).
 분모가 0이면 값은 None이다.
 """
 
 from collections import Counter
 from dataclasses import dataclass, field
+from typing import Final
 
 SENTIMENT_VALUES = ("positive", "negative", "neutral")
+TASK_SUCCESS_MIN_OVERLAP: Final = 0.5  # 경계 차이는 허용하고 다른 문장을 근거로 쓴 경우만 실패로 본다 (2026-09-29 결정)
 
 
 def safe_div(numerator: float, denominator: float) -> float | None:
@@ -147,6 +155,16 @@ def score_review(pred_label: dict, gold_label: dict, review: str, category: str)
         pred_empty=not pred,
         per_aspect=per_aspect,
     )
+
+
+def task_checks(score: ReviewScore, format_ok: bool, min_overlap: float = TASK_SUCCESS_MIN_OVERLAP) -> dict[str, bool]:
+    """과업 성공 조건별 통과 여부. 모두 True면 성공이다."""
+    return {
+        "format": format_ok,
+        "aspects": score.n_pred == score.n_gold == len(score.pairs),
+        "values": all(p["attribute_ok"] and p["sentiment_ok"] for p in score.pairs),
+        "evidence": score.pred_in_source == score.n_pred and all(p["overlap"] >= min_overlap for p in score.pairs),
+    }
 
 
 # ---------- 모아서 지표 ----------

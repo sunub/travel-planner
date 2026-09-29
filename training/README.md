@@ -23,7 +23,8 @@ src/travel_planner/finetune/     라이브러리 코드 (uv가 설치하는 패�
   inference/run_eval.py          Base/어댑터를 불러와 생성 → 채점 → metrics.json
   evaluation/parser.py           출력 문자열 → JSON · 형식/허용값/근거 검사
   evaluation/metrics.py          채점 지표 (순수 함수)
-  evaluation/evaluator.py        정답 + 출력 → 전체·카테고리별 지표
+  evaluation/evaluator.py        정답 + 출력 → 전체·카테고리별 지표 (과업 성공 판정 포함)
+  evaluation/paired.py           두 run 예측의 리뷰 단위 비교 · paired bootstrap
   utils/tracking.py              run 이름 · 디렉터리 · git 정보 · metrics.json · summary.md
   utils/gpu.py                   VRAM 측정
   utils/compare.py               여러 metrics.json → 표 · CSV
@@ -32,11 +33,13 @@ training/
   configs/common.yaml            공통 설정 (model_id, 데이터, prompt, 출력 경로, seed)
   configs/sft_common.yaml        LoRA · QLoRA 공통 하이퍼파라미터
   configs/base_eval.yaml         Base 기준선
+  configs/base4bit_eval.yaml     4bit Base 기준선 (양자화 효과 분리용)
   configs/lora_gold_v1.yaml      LoRA · Gold Only
   configs/qlora_gold_v1.yaml     QLoRA · Gold Only
+  configs/*_busan_v2.yaml        팀 공유 데이터 v2 (Base · 4bit Base · QLoRA)
   prompts/system.txt, user.txt   학습·평가 공통 prompt 템플릿 (코드에 하드코딩하지 않음)
   data/splits/gold_split_v1.json place_id 분할 manifest (커밋)
-  scripts/                       prepare_split.py · train.py · evaluate.py · compare_runs.py
+  scripts/                       prepare_split.py · train.py · evaluate.py · compare_runs.py · compare_predictions.py
   experiments/<run>/             config.yaml · metrics.json · summary.md · loss_history.csv (커밋)
   artifacts/<run>/               adapter/ · checkpoints/ · logs/ · predictions/ (Git 제외)
   tests/                         pytest (GPU 불필요)
@@ -88,6 +91,22 @@ uv run python training/scripts/evaluate.py --config training/configs/base_eval.y
 
 `training/experiments/base_v001/metrics.json`이 생긴다. 예측 원문은 `training/artifacts/base_v001/predictions/test.jsonl`에 저장된다.
 
+### 4bit Base (보조 기준선)
+
+```bash
+uv run python training/scripts/evaluate.py --config training/configs/base4bit_eval.yaml
+```
+
+같은 base 모델을 QLoRA와 같은 4bit NF4 설정으로 불러와 평가한다 (학습 없음). QLoRA와 16bit Base의 차이에는 양자화와 학습의 영향이 섞여 있어서 둘을 나눠 보려고 쓴다.
+
+| 비교 | 보는 것 |
+| --- | --- |
+| 16bit Base vs QLoRA | 튜닝한 결과물을 원본 대신 쓰면 얼마나 나은가 (대표 비교) |
+| 16bit Base vs 4bit Base | 양자화만의 영향 |
+| 4bit Base vs QLoRA | 학습만의 영향 |
+
+`method: base`에 `quantization.load_in_4bit: true`가 있으면 4bit로 불러온다. metrics.json의 `hyperparameters.quantization`에 설정이 남고, 비교표의 `4bit` 열에 `nf4`로 표시된다. 팀 공유 데이터 v2에는 `base4bit_eval_busan_v2.yaml`을 쓴다.
+
 ## 7. LoRA 학습
 
 ```bash
@@ -104,6 +123,21 @@ uv run python training/scripts/train.py --config training/configs/lora_gold_v1.y
 ```bash
 uv run python training/scripts/train.py --config training/configs/qlora_gold_v1.yaml
 ```
+
+### 8GB GPU용 메모리 옵션
+
+Gemma4 E 계열은 per-layer embedding(PLE) 표가 크다 (E2B 4.38GB, E4B 5.25GB, bf16). bitsandbytes 4bit는 nn.Linear만 줄이므로 QLoRA에서도 이 표는 그대로 남아, 8GB GPU에서는 첫 step에 OOM이 난다. v2 설정(`*_busan_v2.yaml`)은 아래 두 옵션을 켠다.
+
+| 설정 | 하는 일 | GPU 절약 (E2B) |
+| --- | --- | --- |
+| `model.text_only: true` | vision/audio 타워를 만들지 않는다 | 약 0.9GB |
+| `model.offload_per_layer_embeddings: true` | PLE 표를 CPU RAM에 두고 입력 토큰의 행만 GPU로 보낸다 (`training/offload.py`) | 4.38GB |
+
+두 옵션 모두 계산 결과를 바꾸지 않는다 (`tests/test_offload.py`가 작은 무작위 모델로 logits가 비트 단위로 같은지 확인한다). 대신 CPU RAM을 PLE 크기만큼 더 쓴다. Base와 QLoRA가 같은 값을 써야 하고, metrics.json의 `model_loading`에 남는다. PLE는 학습하지 않으므로 어댑터에는 영향이 없다. 모델 파라미터 수(`total_params`)에서는 PLE가 빠진다.
+
+### 체크포인트 선택
+
+`qlora_busan_v2.yaml`은 `load_best_model_at_end`로 Validation `eval_loss`가 가장 낮은 epoch의 어댑터를 불러와 저장하고 Test를 평가한다. 어떤 체크포인트가 골라졌는지는 metrics.json의 `training.selected_*`와 summary.md의 `selected checkpoint`에 남는다. 이 설정이 없는 run(`qlora_gold_v1.yaml`)은 마지막 step의 어댑터를 쓴다(`selected_by: last_step`). `loss_history.csv`의 마지막 eval 줄은 선택한 어댑터로 다시 잰 값이다.
 
 먼저 짧게 돌려 보고 싶으면 `--max-samples 8 --set training.num_train_epochs=1`을 붙인다. 스모크 run도 `experiments/`에 기록되니 커밋하지 않을 run 폴더는 지운다.
 
@@ -123,6 +157,18 @@ uv run python training/scripts/compare_runs.py --csv training/experiments/compar
 
 인자가 없으면 `training/experiments/*/metrics.json`을 모두 읽는다. 폴더나 파일을 인자로 주면 그것만 비교한다. `--all-columns`를 붙이면 터미널 표에 모든 열이 나온다. CSV에는 항상 모든 열이 들어간다.
 
+### 두 run을 리뷰 단위로 비교
+
+```bash
+uv run python training/scripts/compare_predictions.py --config training/configs/base_eval.yaml base_v001 qlora_gold_v001
+```
+
+모델과 GPU 없이 두 run의 저장된 예측(`artifacts/<run>/predictions/<split>.jsonl`)을 지금 채점 코드로 다시 채점한다. `--config`는 데이터를 읽는 데만 쓰고, 두 run이 그 설정과 같은 split으로 평가됐는지 확인한다.
+
+- 과업 성공률, 리뷰별 개선 · 퇴행 수, paired bootstrap 95% 신뢰구간(기본 2,000회, seed 0)을 낸다.
+- 요약(리뷰 원문 없음, 커밋): `experiments/comparisons/<A>__vs__<B>_<split>.json`
+- 리뷰별 사례(원문 · 두 출력 · 조건별 판정, Git 제외): `artifacts/comparisons/<A>__vs__<B>_<split>/cases.jsonl`. Judge와 사람 평가의 입력으로도 쓴다.
+
 ## 11. Artifact와 Git 관리
 
 | 커밋한다 (`training/`) | 커밋하지 않는다 (`.gitignore`) |
@@ -139,11 +185,11 @@ uv run python training/scripts/compare_runs.py --csv training/experiments/compar
 ### metrics.json 필드
 
 `experiment_name`, `run_name`, `timestamp`, `git{commit,branch,dirty}`, `model_id`, `method`(base/lora/qlora), `seed`, `precision`, `device`,
-`data{dataset_path, dataset_version, dataset_sha256, split_version, counts{train,validation,test}, extra_train}`,
+`data{dataset_path, dataset_version, dataset_sha256, split_version, counts{train,validation,test}, tiers, synthetic, extra_train}`(`split_files`를 쓰면 `dataset_path` · `dataset_sha256` 대신 `split_files{train,validation,test}{path,sha256}`),
 `hyperparameters{lora, training, quantization}`,
-`training{final_train_loss, mean_train_loss, eval_loss, best_eval_loss, duration_sec, peak_vram_allocated_gb, peak_vram_reserved_gb, adapter_size_mb, trainable_params, token_lengths, adapter_path}`,
+`training{final_train_loss, mean_train_loss, eval_loss, best_eval_loss, selected_by, selected_checkpoint, selected_step, selected_metric, duration_sec, peak_vram_allocated_gb, peak_vram_reserved_gb, adapter_size_mb, trainable_params, token_lengths, adapter_path}`,
 `evaluation{split, num_samples, overall, by_category, inference{duration_sec, sec_per_review, tokens_per_sec, peak_vram_*}, decoding}`.
-Base run은 `hyperparameters`와 `training`이 `null`이다.
+Base run은 `training`이 `null`이다. `hyperparameters`는 16bit Base면 `null`, 4bit Base면 `quantization`만 채워진다.
 
 ### 평가 지표 정의
 
@@ -163,6 +209,7 @@ Base run은 `hyperparameters`와 `training`이 `null`이다.
   - `invalid_value_rate`: 허용값 위반 수 ÷ 예측 aspect 수
 - **채점 규칙:** 파싱에 실패한 출력은 빈 예측으로 채점한다. 필드가 빠진 aspect는 버리고, 허용값을 벗어난 aspect는 남겨서 틀린 예측으로 센다.
 - **그 밖:** `traveler_context_f1`, `exact_review_match`(리뷰를 통째로 맞힌 비율), `empty_review_accuracy`(정답이 비었을 때 예측도 빈 비율).
+- **과업 성공률 (`task_success_rate`):** 한 리뷰가 네 조건을 모두 만족한 비율이다. 조건은 형식(스키마 · 허용값), aspect(FP · FN 없음), 값(attribute · sentiment 모두 맞음), evidence(원문 구절이고 정답과 겹침 F1 ≥ 0.5)다. evidence 경계 차이는 허용하고, 다른 문장을 근거로 쓴 경우만 실패로 본다. traveler_context는 넣지 않는다. 조건별 통과 여부는 예측 파일의 `task_checks`에 남는다.
 - 모든 지표는 전체(`overall`)와 카테고리별(`by_category`)로 나온다. 분모가 0이면 `null`이다.
 
 ### SFT 형식

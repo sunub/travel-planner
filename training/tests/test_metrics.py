@@ -3,7 +3,7 @@ import json
 import pytest
 
 from travel_planner.finetune.evaluation.evaluator import evaluate
-from travel_planner.finetune.evaluation.metrics import aggregate, evidence_overlap_f1, match_aspects, score_review
+from travel_planner.finetune.evaluation.metrics import aggregate, evidence_overlap_f1, match_aspects, score_review, task_checks
 from travel_planner.finetune.evaluation.parser import parse_prediction
 
 REVIEW = "방은 깨끗했지만 조금 시끄러웠어요. 직원은 친절했어요."
@@ -96,3 +96,30 @@ def test_evaluate_outputs():
     assert overall["aspect_precision"] == 1.0 and overall["aspect_recall"] == 0.5
     assert set(result["by_category"]) == {"hotel"}
     assert len(result["samples"]) == 2
+
+
+def test_task_success_checks():
+    def checks(pred: dict, format_ok: bool = True) -> dict:
+        return task_checks(score_review(pred, GOLD, REVIEW, "hotel"), format_ok)
+
+    assert all(checks(GOLD).values())
+    assert checks(GOLD, format_ok=False) == {"format": False, "aspects": True, "values": True, "evidence": True}
+
+    missing = dict(GOLD, aspects=GOLD["aspects"][:2])
+    assert not checks(missing)["aspects"]
+
+    wrong_sentiment = dict(GOLD, aspects=[dict(GOLD["aspects"][0], sentiment="neutral"), *GOLD["aspects"][1:]])
+    assert not checks(wrong_sentiment)["values"]
+
+    # 경계만 다른 구절은 통과하고 (겹침 F1 ≥ 0.5), 다른 문장을 근거로 쓰면 실패한다
+    boundary = dict(GOLD, aspects=[dict(GOLD["aspects"][0], evidence="방은 깨끗했지만 조금"), *GOLD["aspects"][1:]])
+    assert checks(boundary)["evidence"]
+    other_sentence = dict(GOLD, aspects=[dict(GOLD["aspects"][0], evidence="직원은 친절했어요"), *GOLD["aspects"][1:]])
+    assert not checks(other_sentence)["evidence"]
+
+
+def test_evaluate_reports_task_success():
+    result = evaluate([RECORD, dict(RECORD, review_id="r2")], [json.dumps(GOLD, ensure_ascii=False), "not json"])
+    assert result["overall"]["task_success_rate"] == 0.5
+    assert [s["task_success"] for s in result["samples"]] == [True, False]
+    assert result["samples"][1]["task_checks"]["format"] is False

@@ -6,6 +6,7 @@ nn.Linear다. vision/audio 타워에도 같은 이름(q_proj 등)이 있지만 G
 그래서 target_modules는 이름 목록이 아니라 language_model 아래만 고르는 정규식을 쓴다
 (transformers 5.17 modeling_gemma4.py와 PEFT의 gemma4 기본값 `.*language_model\\..*\\.(q_proj|v_proj)`에서 확인).
 KV를 공유하는 뒤쪽 레이어에는 k_proj/v_proj가 없으므로 정규식이 그 레이어에서는 q/o_proj와 MLP만 고른다.
+8GB GPU용 메모리 옵션(model.text_only, model.offload_per_layer_embeddings)은 loading_options()를 본다.
 """
 
 from collections.abc import Mapping
@@ -65,14 +66,37 @@ def quantization_config(config: dict, precision: str):
     )
 
 
+PLE_MODULE: Final = "model.language_model.embed_tokens_per_layer"  # Gemma4ForConditionalGeneration 안의 PLE 표
+
+
+def loading_options(config: dict) -> dict:
+    """메모리를 줄이는 불러오기 옵션. 계산 결과는 바꾸지 않으므로 Base · QLoRA가 같은 값을 쓰면 비교에 영향이 없다.
+
+    - text_only: vision/audio 타워를 만들지 않는다 (텍스트 과업에 쓰지 않는 가중치, E2B 약 0.9GB).
+    - offload_per_layer_embeddings: PLE 표를 CPU RAM에 둔다 (training/offload.py, E2B 4.38GB).
+    """
+    model_cfg = config["model"]
+    return {key: bool(model_cfg.get(key, False)) for key in ("text_only", "offload_per_layer_embeddings")}
+
+
 def load_model(config: dict, precision: str, *, quantized: bool, adapter_path: Path | None = None):
     import torch
-    from transformers import AutoModelForCausalLM
+    from transformers import AutoConfig, AutoModelForCausalLM
 
     model_cfg = config["model"]
+    options = loading_options(config)
     if quantized and not torch.cuda.is_available():
-        raise ConfigError("QLoRA(4bit)는 CUDA GPU가 필요합니다.")
+        raise ConfigError("4bit 양자화(QLoRA · 4bit Base)는 CUDA GPU가 필요합니다.")
     device_map = model_cfg.get("device_map") or ({"": 0} if torch.cuda.is_available() else None)
+    extra = {}
+    if options["text_only"]:
+        hf_config = AutoConfig.from_pretrained(require_model_id(config), revision=model_cfg.get("revision"))
+        hf_config.vision_config = hf_config.audio_config = None  # Gemma4Model은 이 값이 None이면 타워를 만들지 않는다
+        extra["config"] = hf_config
+    if options["offload_per_layer_embeddings"] and not quantized and device_map == {"": 0}:
+        # 16bit는 PLE까지 GPU에 올리면 불러오는 중에 넘칠 수 있어 처음부터 CPU에 둔다.
+        # 4bit는 전체가 GPU에 들어가므로 그대로 불러온 뒤 옮긴다 (bitsandbytes는 CPU 배치가 섞인 device_map을 학습에서 막는다).
+        device_map = {"": 0, PLE_MODULE: "cpu"}
     model = AutoModelForCausalLM.from_pretrained(
         require_model_id(config),
         revision=model_cfg.get("revision"),
@@ -80,7 +104,13 @@ def load_model(config: dict, precision: str, *, quantized: bool, adapter_path: P
         attn_implementation=model_cfg.get("attn_implementation"),
         quantization_config=quantization_config(config, precision) if quantized else None,
         device_map=device_map,
+        **extra,
     )
+    if options["offload_per_layer_embeddings"]:
+        from .offload import offload_per_layer_embeddings
+
+        freed = offload_per_layer_embeddings(model)
+        print(f"  PLE 표를 CPU RAM으로 옮김 (GPU {freed / 2**30:.2f}GB 절약)")
     if adapter_path is not None:
         from peft import PeftModel
 

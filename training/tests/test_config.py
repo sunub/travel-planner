@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from travel_planner.finetune.config import ConfigError, load_config, require_model_id
+from travel_planner.finetune.config import ConfigError, load_config, require_model_id, uses_4bit
 
 from conftest import CONFIG_DIR
 
@@ -56,3 +56,24 @@ def test_empty_model_id_is_rejected():
 def test_invalid_method_rejected():
     with pytest.raises(ConfigError):
         load_config(CONFIG_DIR / "base_eval.yaml", ["method=full"])
+
+
+def test_4bit_base_uses_qlora_quantization_and_same_data():
+    qlora = load_config(CONFIG_DIR / "qlora_gold_v1.yaml")
+    for base16_name, base4_name, qlora_name in (
+        ("base_eval.yaml", "base4bit_eval.yaml", "qlora_gold_v1.yaml"),
+        ("base_eval_busan_v2.yaml", "base4bit_eval_busan_v2.yaml", "qlora_busan_v2.yaml"),
+    ):
+        base16, base4, q = (load_config(CONFIG_DIR / n) for n in (base16_name, base4_name, qlora_name))
+        assert not uses_4bit(base16) and uses_4bit(base4) and uses_4bit(q)
+        assert base4["method"] == "base" and "lora" not in base4
+        keys = ("load_in_4bit", "bnb_4bit_quant_type", "bnb_4bit_use_double_quant", "bnb_4bit_compute_dtype")
+        assert {k: base4["quantization"][k] for k in keys} == {k: qlora["quantization"][k] for k in keys}
+        assert base4["data"] == base16["data"] == q["data"]
+
+
+def test_busan_v2_configs_all_use_e2b():
+    names = ("base_eval_busan_v2.yaml", "base4bit_eval_busan_v2.yaml", "qlora_busan_v2.yaml")
+    assert {load_config(CONFIG_DIR / n)["model"]["name_or_path"] for n in names} == {"google/gemma-4-E2B-it"}
+    assert load_config(CONFIG_DIR / "base_eval.yaml")["model"]["name_or_path"] == "google/gemma-4-E4B-it"  # v1은 그대로
+

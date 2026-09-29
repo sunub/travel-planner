@@ -1,0 +1,10 @@
+# 4bit Base 기준선 · 팀 공유 데이터 v2 · Gemma4 E2B. base_eval_busan_v2.yaml과 같고 base 모델만 4bit NF4로 불러온다 (학습 없음).
+defaults: base_eval_busan_v2.yaml
+
+experiment_name: base4bit_e2b_busan
+
+quantization:                    # qlora_busan_v2.yaml(→ qlora_gold_v1.yaml)과 같은 값
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: auto

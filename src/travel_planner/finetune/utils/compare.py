@@ -9,9 +9,11 @@ from .tracking import read_json
 COLUMNS: list[tuple[str, tuple[str, ...], str]] = [
     ("experiment", ("run_name",), "s"),
     ("method", ("method",), "s"),
+    ("4bit", ("hyperparameters", "quantization", "bnb_4bit_quant_type"), "s"),
     ("data", ("data", "dataset_version"), "s"),
     ("split", ("data", "split_version"), "s"),
     ("n_test", ("evaluation", "num_samples"), "s"),
+    ("Task Success", ("evaluation", "overall", "task_success_rate"), ".4f"),
     ("Aspect F1", ("evaluation", "overall", "aspect_f1"), ".4f"),
     ("Aspect macro F1", ("evaluation", "overall", "aspect_macro_f1"), ".4f"),
     ("Attribute Acc", ("evaluation", "overall", "attribute_accuracy"), ".4f"),

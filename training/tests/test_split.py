@@ -11,6 +11,7 @@ from travel_planner.finetune.data.split import (
     build_manifest,
     check_no_leakage,
     filter_extra_train,
+    held_out_places,
     load_manifest,
 )
 
@@ -64,7 +65,7 @@ def test_manifest_roundtrip_and_extra_train_filter(small_records):
 
     test_place = next(p for p, s in assignment.items() if s == "test")
     silver = [make_record(900, "hotel", test_place, tier="silver"), make_record(901, "hotel", "new:place", tier="silver")]
-    kept, removed = filter_extra_train(silver, manifest)
+    kept, removed = filter_extra_train(silver, held_out_places(splits))
     assert removed == 1 and [r["place_id"] for r in kept] == ["new:place"]
 
     with pytest.raises(SplitError, match="manifest"):

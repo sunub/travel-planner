@@ -8,7 +8,7 @@ import copy
 import json
 from pathlib import Path
 
-from ..config import require_model_id, validate_experiment
+from ..config import require_model_id, uses_4bit, validate_experiment
 from ..data.dataset import write_jsonl
 from ..data.pipeline import load_splits
 from ..data.sft import PromptTemplates, build_messages
@@ -115,9 +115,9 @@ def run_evaluation(config: dict, *, adapter_path: Path | None = None, run_name: 
         save_config(config, run.experiment_dir / "config.yaml")
     metrics["device"] = gpu.device_info()
 
-    print(f"[{run.name}] {split} {len(records)}건 평가 · 모델 {config['model']['name_or_path']} · {config['method']} · {precision}")
+    print(f"[{run.name}] {split} {len(records)}건 평가 · 모델 {config['model']['name_or_path']} · {config['method']} · {precision}{' · 4bit' if uses_4bit(config) else ''}")
     tokenizer = load_tokenizer(config)
-    model = load_model(config, precision, quantized=config["method"] == "qlora", adapter_path=adapter_path)
+    model = load_model(config, precision, quantized=uses_4bit(config), adapter_path=adapter_path)
     metrics[evaluation_key(split)] = evaluate_loaded_model(model, tokenizer, records, config, run, split=split, adapter_path=adapter_path)
 
     metrics_path = run.experiment_dir / "metrics.json"

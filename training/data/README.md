@@ -50,3 +50,23 @@ manifest에는 seed, 비율, 원본 파일 SHA-256, 장소별 배정, split별 r
 ## Gold + Silver 실험
 
 `data.extra_train_paths`에 Silver JSONL을 넣는다. 추가 데이터는 Train에만 들어간다. Validation/Test 장소의 리뷰는 자동으로 빠지고, 뺀 건수는 metrics.json의 `data.extra_train`에 남는다. Test는 그대로라서 Gold Only 실험과 바로 비교할 수 있다.
+
+## 팀 공유 데이터 v2 (`busan_review_sft_v1`)
+
+팀원이 나눠 준 파일을 그대로 쓴다. 팀 전원이 같은 파일로 학습해 결과를 비교한다.
+
+| 항목 | 값 |
+| --- | --- |
+| 위치 | `datas/lkh/out/v2/` (Git 제외): `train.jsonl` · `validation.jsonl` · `test.jsonl` · `manifest.json` · `split.json` |
+| Train | 3,087건 · 장소 800곳 · 모두 Silver · 합성 리뷰 (cjm 1,618 · sang 1,469) |
+| Validation | 371건 · 장소 108곳 · 모두 Silver · 합성 리뷰 |
+| Test | 172건 · 장소 85곳 · 모두 Gold · 합성 리뷰 (cjm Silver를 사람이 검수, 82건은 라벨 수정) |
+| 분할 | 팀 공유 `split.json`(장소 → `train`/`val`/`test`)을 따른다. 세 파일의 모든 장소가 이 배정과 일치한다 |
+
+- 모델: v2 실험은 모두 `google/gemma-4-E2B-it`를 쓴다. 팀 노트북(8GB)에서 E4B는 4bit로도 가중치가 9GB를 넘어 학습할 수 없었다 (per-layer embedding 5.25GB는 4bit로 줄지 않는다). E2B도 그대로는 OOM이라 `model.text_only` · `model.offload_per_layer_embeddings`를 켠다 (`training/README.md` "8GB GPU용 메모리 옵션").
+- 설정: `configs/base_eval_busan_v2.yaml`(Base), `configs/base4bit_eval_busan_v2.yaml`(4bit Base), `configs/qlora_busan_v2.yaml`(QLoRA). `data.split_files`로 세 파일을 직접 읽는다. 합치거나 manifest로 변환하지 않는다.
+- 불러올 때 레코드 검사, 파일 간 `review_id` 중복, 장소 누수, Test Gold 검사를 모두 한다. metrics.json의 `data.split_files`에 파일별 SHA-256이 남으니, 팀원끼리 같은 파일로 학습했는지 이 값으로 확인한다.
+- Test가 `gold_split_v1`과 다르다. v2 run은 `base_v001` · `qlora_gold_v001`과 점수를 비교하지 않는다. v2 Test에서 Base를 따로 평가한다.
+- Test도 합성 리뷰다. 실제 이용자 리뷰에서의 성능은 이 데이터로 말할 수 없다.
+- 정답 aspect가 빈 리뷰가 없어서 `empty_review_accuracy`는 계산되지 않는다(`null`).
+

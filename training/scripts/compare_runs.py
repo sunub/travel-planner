@@ -14,7 +14,7 @@ from travel_planner.finetune.config import REPO_ROOT
 from travel_planner.finetune.utils.compare import COLUMNS, find_metrics, render_table, rows_from, write_csv
 
 SHORT_COLUMNS = [
-    "experiment", "method", "Aspect F1", "Attribute Acc", "Sentiment Acc", "Evidence in-source", "Evidence exact",
+    "experiment", "method", "4bit", "Task Success", "Aspect F1", "Attribute Acc", "Sentiment Acc", "Evidence in-source", "Evidence exact",
     "JSON Valid", "Train VRAM (GB)", "Train Time (min)", "Adapter Size (MB)",
 ]  # fmt: skip
 

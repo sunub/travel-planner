@@ -86,6 +86,11 @@ def validate_experiment(config: dict) -> None:
         raise ConfigError("qlora 설정에는 quantization.load_in_4bit: true가 필요합니다")
 
 
+def uses_4bit(config: dict) -> bool:
+    """base 모델을 4bit로 불러오는가. QLoRA는 항상, Base는 quantization.load_in_4bit: true일 때 (4bit Base 기준선)."""
+    return config["method"] == "qlora" or (config["method"] == "base" and bool((config.get("quantization") or {}).get("load_in_4bit")))
+
+
 def require_model_id(config: dict) -> str:
     """모델을 실제로 불러오기 직전에만 부른다. model_id가 비어 있으면 무엇을 채울지 알려준다."""
     model_id = config.get("model", {}).get("name_or_path")
