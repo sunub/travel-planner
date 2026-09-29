@@ -1,0 +1,12 @@
+# EXAONE-3.5-7.8B-Instruct는 trust_remote_code=True로 커스텀 모델링 코드를 함께 받는다.
+# 모델 카드(https://huggingface.co/LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct) 기준 transformers>=4.43이 필요하다.
+# 커스텀 코드가 transformers 5.x의 변경 사항과 맞는지 확인되지 않았으므로 4.x대로 고정한다.
+# 실제 설치 전에 팀 GPU 환경(CUDA 버전)에 맞는 torch를 먼저 설치하는 것을 권장한다.
+torch>=2.14.0
+transformers>=4.43,<5.0
+peft>=0.11.0
+trl>=0.9.0
+bitsandbytes>=0.43.0
+accelerate>=0.31.0
+pyyaml>=6.0
+python-dotenv>=1.0.0

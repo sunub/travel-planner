@@ -1,0 +1,62 @@
+# EXAONE-3.5-7.8B-Instruct QLoRA 학습·평가 설정.
+#
+# 데이터셋은 아직 확정되지 않았다. data.* 경로가 비어 있으면 train.py/evaluate.py가 멈추고
+# 무엇을 채워야 하는지 알려준다. 실제 파일이 정해지면 이 경로만 바꾸면 된다.
+#
+# 프롬프트 형식·데이터 형식·평가 지표는 팀원 브랜치(origin/lkh_train)의 training/ 코드를 그대로 따른다
+# (data.py, evaluate.py 상단 주석 참고). 같은 기준으로 팀원의 Gemma·Qwen 결과와 비교하기 위해서다.
+
+seed: 42
+
+model:
+  name_or_path: LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct
+  trust_remote_code: true
+  revision: null # 재현성을 위해 커밋 해시로 고정할 수 있다
+  attn_implementation: sdpa
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: bf16
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  bias: none
+  # target_modules는 적지 않는다. train.py가 로드한 모델의 nn.Linear 층 이름을 직접 읽어 자동으로 찾고,
+  # 찾은 이름을 로그로 남긴다 (EXAONE은 Gemma와 층 이름이 달라 하드코딩하지 않는다).
+
+training:
+  learning_rate: 2.0e-4
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 16 # 유효 배치 = 1 x 16 = 16
+  max_seq_length: 2048 # 이보다 긴 예제가 있으면 학습 전에 멈춘다
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit
+  gradient_checkpointing: true
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+
+data:
+  # 아직 정해지지 않았다. JSONL 경로 (datas/common/README.md 파이프라인 결과 형식: review_id, place_id,
+  # category, synthetic, review, label{traveler_context, aspects}, tier). 저장소 루트 기준 상대경로도 된다.
+  train_path: null
+  validation_path: null
+  test_path: null
+  dataset_version: null
+
+inference:
+  max_new_tokens: 768 # Gold 라벨 JSON 최대 길이 기준(팀원 training/configs/common.yaml)에 맞춘 값
+  batch_size: 4
+
+output:
+  artifacts_root: src/travel_planner/model-yay/artifacts # Git 제외 권장 (어댑터·체크포인트·예측 결과)
