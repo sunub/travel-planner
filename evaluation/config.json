@@ -8,5 +8,8 @@
       "adapter_path": "../artifacts/exaone_review_extraction/EXAONE-3.5-2.4B-Instruct-qlora-seed42-length640-lr1e4-v2/adapter",
       "max_new_tokens": 384
     }
-  ]
+  ],
+  "judge": {
+    "model": "gpt-5-mini"
+  }
 }

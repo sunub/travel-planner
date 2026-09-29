@@ -36,5 +36,8 @@
       "adapter_path": null,
       "max_new_tokens": 384
     }
-  ]
+  ],
+  "judge": {
+    "model": "gpt-6-astra"
+  }
 }

@@ -6,6 +6,7 @@ import gc
 import html
 import itertools
 import json
+import re
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -58,6 +59,7 @@ def validate_config(config: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(config)
     normalized["gold"] = gold
     normalized["models"] = normalized_models
+    normalized.setdefault("judge", {})
     return normalized
 
 
@@ -150,6 +152,90 @@ def evaluate_prediction_files(gold_rows: list[dict[str, Any]], prediction_paths:
     return results
 
 
+def _judge_prompt(review: str, category: str, gold: dict[str, Any], candidate: dict[str, Any]) -> str:
+    return f"""You are a strict evaluator for Korean travel-review extraction.
+Compare the candidate with the human-approved gold label. Judge meaning, not length.
+Evidence must be a verbatim substring of the review and support the claimed aspect.
+Return JSON only with this shape:
+{{"pass": true, "score": 0.0, "correctness": "pass|partial|fail", "completeness": "pass|partial|fail", "evidence_grounding": "pass|partial|fail", "evidence_minimality": "pass|partial|fail", "schema_adherence": "pass|fail", "error_tags": [], "reason": "short reason"}}
+
+Category: {category}
+Review: {review}
+Gold: {json.dumps(gold, ensure_ascii=False)}
+Candidate: {json.dumps(candidate, ensure_ascii=False)}
+Score 1.0 means fully correct, 0.5 partially correct, and 0.0 materially incorrect.
+"""
+
+
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+        if not match:
+            return None
+        try:
+            value = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+    return value if isinstance(value, dict) else None
+
+
+def _supports_temperature(model: str) -> bool:
+    """GPT-5 계열과 o 시리즈 추론 모델은 temperature를 기본값(1)만 허용한다."""
+    name = model.lower()
+    return not (name.startswith("gpt-5") or re.match(r"o\d", name))
+
+
+def call_openai_judge(*, model: str, review: str, category: str, gold: dict[str, Any], candidate: dict[str, Any], api_key: str, base_url: str = "https://api.openai.com/v1/chat/completions") -> dict[str, Any]:
+    import requests
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": "Return only valid JSON."},
+            {"role": "user", "content": _judge_prompt(review, category, gold, candidate)},
+        ],
+    }
+    if _supports_temperature(model):
+        payload["temperature"] = 0
+    response = requests.post(
+        base_url,
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json=payload,
+        timeout=300,
+    )
+    response.raise_for_status()
+    result = _extract_json_object(response.json()["choices"][0]["message"]["content"])
+    return result or {"pass": False, "score": 0.0, "error_tags": ["invalid_judge_json"]}
+
+
+def run_judge(*, gold_rows: list[dict[str, Any]], prediction_paths: dict[str, Path], model: str, api_key: str, output_path: Path, limit: int | None = None) -> dict[str, Any]:
+    gold = _by_id(gold_rows)
+    predictions = {name: _by_id(read_jsonl(path)) for name, path in prediction_paths.items()}
+    rows = []
+    for index, (review_id, gold_row) in enumerate(gold.items()):
+        if limit is not None and index >= limit:
+            break
+        for model_name, model_rows in predictions.items():
+            candidate = model_rows.get(review_id, {}).get("label", {"traveler_context": [], "aspects": []})
+            result = call_openai_judge(model=model, review=gold_row.get("review", ""), category=gold_row.get("category", ""), gold=gold_row.get("label", {}), candidate=candidate, api_key=api_key)
+            rows.append({"review_id": review_id, "model": model_name, "judge": result})
+    write_jsonl(output_path, rows)
+    summary = {name: {"items": 0, "pass_rate": 0.0, "mean_score": 0.0} for name in prediction_paths}
+    for row in rows:
+        item = summary[row["model"]]
+        item["items"] += 1
+        item["pass_rate"] += float(bool(row["judge"].get("pass")))
+        item["mean_score"] += float(row["judge"].get("score", 0.0) or 0.0)
+    for item in summary.values():
+        if item["items"]:
+            item["pass_rate"] /= item["items"]
+            item["mean_score"] /= item["items"]
+    return summary
+
+
 def build_human_rows(gold_rows: list[dict[str, Any]], prediction_paths: dict[str, Path]) -> list[dict[str, Any]]:
     gold = _by_id(gold_rows)
     predictions = {name: _by_id(read_jsonl(path)) for name, path in prediction_paths.items()}
@@ -197,7 +283,14 @@ def build_report_html(metrics: dict[str, Any], human_review_filename: str) -> st
     rows = []
     for name, result in metrics.get("models", {}).items():
         rows.append(f"<tr><td>{html.escape(name)}</td><td>{result.get('aspect', {}).get('f1', 0):.4f}</td><td>{result.get('aspect_with_evidence', {}).get('f1', 0):.4f}</td><td>{result.get('evidence_in_source_rate', 0):.4f}</td><td>{result.get('record_exact_match', 0):.4f}</td><td>{result.get('json_success_rate', 0):.4f}</td><td>{result.get('schema_valid_rate', 0):.4f}</td></tr>")
-    return f"""<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>TripFit Evaluation Report</title><style>body{{font-family:system-ui,sans-serif;background:#f5f7fb;color:#172033;margin:0}}main{{max-width:1180px;margin:32px auto;padding:0 20px}}.card{{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 4px 16px #1720330d}}table{{border-collapse:collapse;width:100%;background:#fff}}th,td{{border-bottom:1px solid #e6ebf2;padding:12px;text-align:left}}th{{background:#eef3fa}}a{{color:#165bc4}}</style></head><body><main><h1>TripFit 평가 리포트</h1><div class=\"card\"><p>Gold records: {metrics.get('gold_records', 0)}</p><p>인간 평가: <a href=\"{html.escape(human_review_filename)}\">human_review.html 열기</a></p></div><div class=\"card\"><h2>자동 정량 평가</h2><table><thead><tr><th>모델</th><th>Aspect F1</th><th>Evidence 포함 F1</th><th>Evidence 원문 포함</th><th>Record Exact</th><th>JSON 성공</th><th>Schema Valid</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div><div class=\"card\"><h2>해석</h2><p>최종 모델 선택은 Aspect F1 하나가 아니라 구조화 정확도, Evidence 근거성, JSON 안정성과 인간 평가 결과를 함께 확인해야 합니다.</p></div></main></body></html>"""
+    judge = metrics.get("judge", {})
+    judge_rows = []
+    for name, result in judge.get("results", {}).items():
+        judge_rows.append(f"<tr><td>{html.escape(name)}</td><td>{result.get('pass_rate', 0):.4f}</td><td>{result.get('mean_score', 0):.4f}</td><td>{result.get('items', 0)}</td></tr>")
+    judge_section = "<p>GPT Judge를 실행하지 않았습니다.</p>"
+    if judge_rows:
+        judge_section = f"<table><thead><tr><th>모델</th><th>Pass Rate</th><th>평균 점수</th><th>샘플 수</th></tr></thead><tbody>{''.join(judge_rows)}</tbody></table>"
+    return f"""<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>TripFit Evaluation Report</title><style>body{{font-family:system-ui,sans-serif;background:#f5f7fb;color:#172033;margin:0}}main{{max-width:1180px;margin:32px auto;padding:0 20px}}.card{{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 4px 16px #1720330d}}table{{border-collapse:collapse;width:100%;background:#fff}}th,td{{border-bottom:1px solid #e6ebf2;padding:12px;text-align:left}}th{{background:#eef3fa}}a{{color:#165bc4}}</style></head><body><main><h1>TripFit 평가 리포트</h1><div class=\"card\"><p>Gold records: {metrics.get('gold_records', 0)}</p><p>인간 평가: <a href=\"{html.escape(human_review_filename)}\">human_review.html 열기</a></p></div><div class=\"card\"><h2>자동 정량 평가</h2><table><thead><tr><th>모델</th><th>Aspect F1</th><th>Evidence 포함 F1</th><th>Evidence 원문 포함</th><th>Record Exact</th><th>JSON 성공</th><th>Schema Valid</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div><div class=\"card\"><h2>GPT Judge</h2>{judge_section}</div><div class=\"card\"><h2>해석</h2><p>최종 모델 선택은 Aspect F1 하나가 아니라 구조화 정확도, Evidence 근거성, JSON 안정성, GPT Judge와 인간 평가 결과를 함께 확인해야 합니다.</p></div></main></body></html>"""
 
 
 def build_human_review_html_v2(rows: list[dict[str, Any]]) -> str:
