@@ -22,7 +22,7 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-from data import format_duration, format_hm, load_records, to_sft_example
+from data import encode_example, format_duration, format_hm, load_records, to_sft_example
 
 MODEL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODEL_DIR.parents[2]
@@ -156,7 +156,9 @@ def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool, m
         save_strategy=t.get("save_strategy", "epoch") if not smoke else "no",
         save_total_limit=t.get("save_total_limit", 2),
         report_to="none",
-        completion_only_loss=True,  # prompt(system+user)는 loss에서 빼고 assistant 응답만 학습한다
+        # completion_only_loss는 안 쓴다. 데이터셋에 이미 -100으로 마스킹한 labels가 있으면(encode_example,
+        # data.py) TRL은 그걸 그대로 쓰고 자체 prompt/completion 마스킹은 건너뛴다(trl SFTTrainer의
+        # `is_processed`/"labels" 컬럼 존재 여부 분기).
         packing=False,
     )
 
@@ -242,11 +244,8 @@ def main() -> None:
         val_records = val_records[: args.limit]
     print(f"데이터: train {len(train_records)}건 / validation {len(val_records)}건 (전체 train {full_train_count}건)")
 
-    train_examples = [to_sft_example(r) for r in train_records]
-    val_examples = [to_sft_example(r) for r in val_records]
-
     if args.dry_run:
-        sample = train_examples[0]
+        sample = to_sft_example(train_records[0])
         print("\n--- 첫 학습 예제 (prompt) ---")
         for message in sample["prompt"]:
             print(f"[{message['role']}]\n{message['content']}\n")
@@ -266,6 +265,16 @@ def main() -> None:
 
     print(f"모델: {config['model']['name_or_path']} (QLoRA, 4bit NF4) · artifacts: {output_dir}")
     tokenizer, base_model = load_tokenizer_and_model(config, hf_token)
+
+    # 토큰화 + assistant 응답만 남기는 labels 마스킹을 직접 한다 (encode_example, data.py 참고).
+    # TRL의 prompt/completion 자동 마스킹에 맡기지 않는다 — EXAONE 채팅 템플릿에서 "Mismatch between
+    # tokenized prompt and the start of tokenized prompt+completion" 경고가 나는데, 그 상태로 TRL에
+    # 맡기면 엉뚱한 위치에서 마스킹 경계가 잘릴 수 있다.
+    max_seq_length = config["training"]["max_seq_length"]
+    train_examples = [encode_example(tokenizer, r, max_seq_length) for r in train_records]
+    val_examples = [encode_example(tokenizer, r, max_seq_length) for r in val_records]
+    print(f"토큰화 완료: train {len(train_examples)}건 / validation {len(val_examples)}건")
+
     peft_model, target_modules = build_peft_model(base_model, config)
 
     trainable_params = sum(p.numel() for p in peft_model.parameters() if p.requires_grad)

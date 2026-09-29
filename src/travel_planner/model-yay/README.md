@@ -20,16 +20,62 @@
 
 ## 의존성 버전
 
-`requirements.txt`는 `transformers==5.17.0` / `trl==1.14.0` / `peft==0.21.0` / `bitsandbytes==0.50.2` /
-`accelerate==1.15.0`으로 고정되어 있다. EXAONE-3.5의 `trust_remote_code` 코드가 2026-02-06 커밋부터
-`transformers.modeling_rope_utils.RopeParameters`(transformers 5의 rope 리팩터에서 생긴 심볼)를 써서,
-transformers 4.x에서는 `ImportError: cannot import name 'RopeParameters'`가 난다. 이 다섯 패키지는
-서로 맞물려 있어 하나만 올리면 다시 깨질 수 있다 — 팀원 브랜치(`origin/lkh_train`)가 Gemma4 QLoRA
-학습에 이미 검증해 둔 조합을 그대로 가져왔다 (`training/README.md`의 uv.lock 버전).
+`requirements.txt`는 `transformers==5.0.0` / `trl==1.14.0` / `peft==0.21.0` / `bitsandbytes==0.50.2` /
+`accelerate==1.15.0`으로 고정되어 있다. EXAONE-3.5의 `trust_remote_code` 코드(2026-02-06 커밋
+`553ea25`부터)가 transformers 5.0/5.1 시점의 내부 API를 그대로 부르기 때문이다:
+
+- `RopeParameters`(`transformers.modeling_rope_utils`)는 transformers 5.0에서 생겼다 → `<5`면
+  `ImportError`.
+- `create_causal_mask(input_embeds=...)`(`transformers.masking_utils`)의 키워드 인자 이름이 5.2.0부터
+  `input_embeds` → `inputs_embeds`로 바뀌었다 → `>=5.2`면 `TypeError: unexpected keyword argument
+  'input_embeds'`.
+
+그래서 실제로 맞는 범위는 `5.0.x`~`5.1.x`뿐이다. 처음엔 팀원 브랜치(`origin/lkh_train`)가 Gemma4 QLoRA에
+쓰는 `transformers==5.17.0` 조합을 그대로 가져왔지만(`training/README.md`), EXAONE 3.5는 transformers에
+내장(`model_type "exaone"`)돼 있지 않아서(5.17.0엔 `exaone4`/`exaone4_5`/`exaone_moe`만 있다)
+`trust_remote_code: false`로 피해 갈 수도 없다. `trl==1.14.0`이 `transformers!=5.1.0`을 명시적으로
+막아 둬서(알려진 버그, transformers#43780), 남는 선택지는 `transformers==5.0.0`뿐이다.
+peft/bitsandbytes/accelerate는 팀원과 같은 버전을 유지했다 (`uv pip compile`로 충돌 없이 풀리는 것까지는
+확인했지만, 팀원처럼 실제 학습으로 검증된 조합은 아니다).
 
 transformers 5는 `TrainingArguments.warmup_ratio`를 없애고 `warmup_steps`가 1 미만 실수면 비율로
-취급하도록 바꿨다. `config.yaml`의 `training.warmup_steps: 0.03`과 `train.py`의 `build_sft_config`가
-이 규칙을 따른다.
+취급하도록 바꿨다 (5.0.0부터 이미 이 규칙). `config.yaml`의 `training.warmup_steps: 0.03`과 `train.py`의
+`build_sft_config`가 이 규칙을 따른다.
+
+## assistant 응답만 학습하기 (labels 마스킹)
+
+세 단계를 거쳐 지금 방식이 됐다.
+
+1. 팀원 Gemma4 파이프라인과 같은 방식 — `to_sft_example()`로 prompt/completion을 만들고, TRL의
+   `SFTConfig(completion_only_loss=True)`가 마스킹을 하게 — 을 그대로 썼다.
+2. EXAONE 채팅 템플릿에서 `Mismatch between tokenized prompt and the start of tokenized
+   prompt+completion` 경고가 났다. TRL은 이 경고가 나도 "prompt만 토큰화했을 때의 토큰 개수"만 믿고
+   그 위치에서 마스킹 경계를 자르므로(`trl/trainer/sft_trainer.py`의 `tokenize_fn`), 실제 내용이
+   어긋나면 엉뚱한 자리에서 잘릴 수 있었다. 그래서 prompt만 토큰화한 결과와 prompt+completion 전체를
+   토큰화한 결과를 직접 비교해 실제로 같은 구간(공통 접두사)까지만 마스킹하는 방식으로 바꿨다.
+3. 그런데 이 공통 접두사 방식도 실제로 문제가 있었다: assistant 턴을 여는 템플릿 텍스트
+   `"[|assistant|]"`의 `"]"`와 정답 JSON의 `"{"`가 `"]{"`라는 토큰 하나로 합쳐져서, **학습 때 쓰는
+   prompt 토큰 수가 추론 때(evaluate.py가 만드는, 뒤에 아무것도 안 붙는 진짜 prompt) 토큰 수와
+   달라졌다.** 모델이 학습 때 한 번도 보지 못한 prompt로 추론을 받게 되는 문제라 단순 경고보다 훨씬
+   심각했다.
+
+그래서 지금은 `data.py`의 `encode_example()`이 prompt·completion·종료 토큰을 **절대 같이 토큰화하지
+않고** 각각 따로 토큰화해 토큰 id 리스트로 이어 붙인다:
+
+- `prompt_ids`: `prompt_text(record, tokenizer)`(`apply_chat_template(tokenize=False,
+  add_generation_prompt=True)`로 문자열을 만든 뒤 `tokenizer(text, add_special_tokens=False)`로
+  토큰화)로 만든다. **`evaluate.py`의 `generate_outputs()`도 정확히 같은 `prompt_text()` 함수를
+  쓴다** — 두 파일이 비슷하게 각자 짜는 게 아니라 함수 하나를 같이 쓰므로, 학습 prompt와 추론 prompt가
+  달라질 수가 없다.
+- `completion_ids`: 정답 JSON 문자열만 따로 `tokenizer(text, add_special_tokens=False)`로 토큰화.
+- 그 뒤에 `tokenizer.eos_token_id` 하나를 붙인다 (턴이 끝난다는 신호도 학습해야 생성이 끝없이
+  이어지지 않는다).
+
+문자열을 합쳐서 다시 토큰화하는 게 아니라 토큰 id 리스트를 이어 붙이기만 하므로, 조각 경계에서 BPE가
+다르게 합쳐질 여지 자체가 없다. `labels`는 `prompt_ids` 구간 전부 `-100`, `completion_ids`와 eos
+구간만 그대로 둔다. `train.py`는 이 `{input_ids, labels}`를 그대로 `SFTTrainer`에 넘기고, TRL은
+`labels` 컬럼이 있으면 자체 마스킹을 건너뛰므로 `SFTConfig`에 `completion_only_loss`는 주지 않는다.
+`to_sft_example()`은 `--dry-run` 미리보기(토크나이저 불필요)에만 쓴다.
 
 ## 데이터셋
 

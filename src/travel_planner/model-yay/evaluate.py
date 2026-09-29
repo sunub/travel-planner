@@ -33,7 +33,7 @@ from typing import Literal
 import yaml
 from dotenv import load_dotenv
 
-from data import ATTRIBUTES, SENTIMENTS, TRAVELER_CONTEXTS, build_messages, format_hm, load_records
+from data import ATTRIBUTES, SENTIMENTS, TRAVELER_CONTEXTS, format_hm, load_records, prompt_text
 
 MODEL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODEL_DIR.parents[2]
@@ -393,7 +393,7 @@ def evaluate_predictions(records: list[dict], outputs: list[str]) -> dict:
 def generate_outputs(
     model,
     tokenizer,
-    message_lists: list[list[dict]],
+    records: list[dict],
     *,
     max_new_tokens: int,
     batch_size: int,
@@ -403,6 +403,10 @@ def generate_outputs(
 
     estimate_for={"validation": 371, "test": 172}처럼 넘기면, 첫 배치를 처리한 뒤 그때까지의
     리뷰 1건당 평균 시간으로 각 split을 통째로 평가하면 얼마나 걸릴지 한 번만 출력한다.
+
+    prompt 문자열은 data.prompt_text()로 만든다 — train.py의 encode_example()이 학습 prompt를 만들 때
+    쓰는 것과 같은 함수다. 학습 때 본 prompt와 추론 때 넣는 prompt가 토큰 단위로 어긋나면 안 되므로,
+    "비슷하게 두 번 짜는" 대신 함수 하나를 같이 쓴다.
     """
     import torch
 
@@ -412,7 +416,7 @@ def generate_outputs(
     model.config.use_cache = True
     tokenizer.padding_side = "left"
 
-    prompts = [tokenizer.apply_chat_template(m, tokenize=False, add_generation_prompt=True) for m in message_lists]
+    prompts = [prompt_text(r, tokenizer) for r in records]
     outputs, generated_tokens, reviews_done = [], 0, 0
     estimate_printed = False
     start = time.perf_counter()
@@ -540,11 +544,10 @@ def main() -> None:
 
     tokenizer, model = load_model_for_eval(config, hf_token, args.adapter)
     inference = config["inference"]
-    message_lists = [build_messages(r) for r in records]
     outputs, stats = generate_outputs(
         model,
         tokenizer,
-        message_lists,
+        records,
         max_new_tokens=inference["max_new_tokens"],
         batch_size=inference["batch_size"],
         estimate_for=estimate_for,

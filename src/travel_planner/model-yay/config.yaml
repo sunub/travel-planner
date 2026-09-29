@@ -10,6 +10,9 @@ seed: 42
 
 model:
   name_or_path: LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct
+  # EXAONE 3.5(model_type "exaone")는 transformers 5.17.0에 내장돼 있지 않다 (exaone4/exaone4_5/
+  # exaone_moe만 내장). 그래서 false로 바꿀 수 없고, HF 리포의 원격 코드(modeling_exaone.py)를 그대로
+  # 받아써야 한다. requirements.txt에 이 원격 코드와 맞는 transformers 버전을 고정해 뒀다.
   trust_remote_code: true
   revision: null # 재현성을 위해 커밋 해시로 고정할 수 있다
   attn_implementation: sdpa
