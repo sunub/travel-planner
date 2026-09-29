@@ -65,13 +65,17 @@ uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/
 # 실제 학습 (데이터 경로를 config.yaml에 채운 뒤)
 uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml
 
-# 짧게 스모크 실행
-uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --max-samples 8
+# 짧게 스모크 실행: train/validation 앞 32건만, 5 스텝만, 결과는 별도 폴더에
+uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml \
+    --limit 32 --max-steps 5 --output-dir src/travel_planner/model-yay/artifacts/smoke
 ```
 
-학습이 끝나면 `output.artifacts_root`(기본 `src/travel_planner/model-yay/artifacts`) 아래에
-`adapter/`(LoRA 어댑터 + tokenizer), `checkpoints/`(epoch별 체크포인트), `metrics.json`(파라미터 수·최대
-VRAM·학습 시간·loss), `log_history.json`(step별 loss 기록)이 생긴다.
+학습이 끝나면 `output.artifacts_root`(기본 `src/travel_planner/model-yay/artifacts`, `--output-dir`로
+바꿀 수 있다) 아래에 `adapter/`(LoRA 어댑터 + tokenizer), `checkpoints/`(epoch별 체크포인트),
+`metrics.json`(파라미터 수·최대 VRAM·학습 시간·loss), `log_history.json`(step별 loss 기록)이 생긴다.
+`--max-steps`로 시험 실행하면 `metrics.json`의 `time_estimate`에 스텝 1회 평균 시간(첫 스텝 제외)과
+config의 전체 train 데이터 기준 예상 전체 학습 시간이 함께 남는다. 학습 중에는 로그에 현재 스텝/전체
+스텝·경과 시간·예상 남은 시간이 주기적으로 찍힌다.
 
 ## 평가
 
@@ -86,3 +90,7 @@ uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_plann
 
 `predictions/<method>_<split>.jsonl`(리뷰별 원문 출력·파싱 결과·채점)과 `metrics_<method>.json`
 (aspect F1·attribute/sentiment 정확도·evidence 지표·JSON 유효성 등, 팀원과 동일한 지표)이 생긴다.
+
+첫 배치를 처리한 직후, 그때까지의 리뷰 1건당 평균 추론 시간을 기준으로 validation 전체와 test 전체를
+평가하면 얼마나 걸릴지 한 번 출력한다 (`--split`이나 `--max-samples`로 일부만 돌려도 두 split 전체
+기준으로 보여준다).

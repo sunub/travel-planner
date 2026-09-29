@@ -136,3 +136,27 @@ def load_records(path: str | Path) -> list[dict]:
     if not p.is_absolute():
         p = REPO_ROOT / p
     return read_jsonl(p)
+
+
+def format_duration(seconds: float | None) -> str:
+    """초 -> '1시간 23분' / '5분 12초'처럼 사람이 읽기 좋은 문자열. train.py/evaluate.py의 진행 로그에서 쓴다."""
+    if seconds is None:
+        return "계산 불가"
+    seconds = max(0, int(round(seconds)))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours}시간 {minutes}분"
+    if minutes:
+        return f"{minutes}분 {secs}초"
+    return f"{secs}초"
+
+
+def format_hm(seconds: float | None) -> str:
+    """초 -> 'H:MM' 형식. 예상 전체 학습 시간처럼 표 형태로 남길 때 쓴다."""
+    if seconds is None:
+        return "-"
+    seconds = max(0, int(round(seconds)))
+    hours, remainder = divmod(seconds, 3600)
+    minutes = remainder // 60
+    return f"{hours}:{minutes:02d}"

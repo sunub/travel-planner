@@ -33,7 +33,7 @@ from typing import Literal
 import yaml
 from dotenv import load_dotenv
 
-from data import ATTRIBUTES, SENTIMENTS, TRAVELER_CONTEXTS, build_messages, load_records
+from data import ATTRIBUTES, SENTIMENTS, TRAVELER_CONTEXTS, build_messages, format_hm, load_records
 
 MODEL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODEL_DIR.parents[2]
@@ -391,9 +391,19 @@ def evaluate_predictions(records: list[dict], outputs: list[str]) -> dict:
 
 
 def generate_outputs(
-    model, tokenizer, message_lists: list[list[dict]], *, max_new_tokens: int, batch_size: int
+    model,
+    tokenizer,
+    message_lists: list[list[dict]],
+    *,
+    max_new_tokens: int,
+    batch_size: int,
+    estimate_for: dict[str, int] | None = None,
 ) -> tuple[list[str], dict]:
-    """greedy decoding (do_sample=False)이라 같은 입력에는 매번 같은 답이 나온다. (출력, 속도 통계)."""
+    """greedy decoding (do_sample=False)이라 같은 입력에는 매번 같은 답이 나온다. (출력, 속도 통계).
+
+    estimate_for={"validation": 371, "test": 172}처럼 넘기면, 첫 배치를 처리한 뒤 그때까지의
+    리뷰 1건당 평균 시간으로 각 split을 통째로 평가하면 얼마나 걸릴지 한 번만 출력한다.
+    """
     import torch
 
     model.eval()
@@ -403,7 +413,8 @@ def generate_outputs(
     tokenizer.padding_side = "left"
 
     prompts = [tokenizer.apply_chat_template(m, tokenize=False, add_generation_prompt=True) for m in message_lists]
-    outputs, generated_tokens = [], 0
+    outputs, generated_tokens, reviews_done = [], 0, 0
+    estimate_printed = False
     start = time.perf_counter()
     with torch.inference_mode():
         for i in range(0, len(prompts), batch_size):
@@ -421,7 +432,14 @@ def generate_outputs(
             new_tokens = generated[:, batch["input_ids"].shape[1] :]
             generated_tokens += int((new_tokens != tokenizer.pad_token_id).sum())
             outputs += tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
+            reviews_done += batch["input_ids"].shape[0]
             print(f"  생성 {min(i + batch_size, len(prompts))}/{len(prompts)}", flush=True)
+            if estimate_for and not estimate_printed:
+                sec_per_review = (time.perf_counter() - start) / reviews_done
+                estimate_printed = True
+                print(f"  --- 예상 소요 시간 (첫 {reviews_done}건 기준 리뷰당 {sec_per_review:.2f}초) ---")
+                for name, count in estimate_for.items():
+                    print(f"    {name} {count}건 평가: 약 {format_hm(sec_per_review * count)}")
     duration = time.perf_counter() - start
     return outputs, {
         "duration_sec": round(duration, 2),
@@ -509,6 +527,13 @@ def main() -> None:
         records = records[: args.max_samples]
     print(f"{args.split} {len(records)}건 · 모델 {config['model']['name_or_path']} · {'QLoRA' if args.adapter else 'Base'}")
 
+    # validation·test 전체 건수 (--split, --max-samples와 무관하게). 첫 배치 처리 후 이 두 split을
+    # 통째로 평가하면 걸릴 예상 시간을 보여주는 데 쓴다.
+    estimate_for = {
+        "validation": len(load_records(config["data"]["validation_path"])),
+        "test": len(load_records(config["data"]["test_path"])),
+    }
+
     import os
 
     hf_token = os.environ.get("HF_TOKEN") or None
@@ -517,7 +542,12 @@ def main() -> None:
     inference = config["inference"]
     message_lists = [build_messages(r) for r in records]
     outputs, stats = generate_outputs(
-        model, tokenizer, message_lists, max_new_tokens=inference["max_new_tokens"], batch_size=inference["batch_size"]
+        model,
+        tokenizer,
+        message_lists,
+        max_new_tokens=inference["max_new_tokens"],
+        batch_size=inference["batch_size"],
+        estimate_for=estimate_for,
     )
     result = evaluate_predictions(records, outputs)
 

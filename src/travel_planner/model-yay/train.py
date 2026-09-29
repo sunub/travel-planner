@@ -15,13 +15,14 @@ data.{train_path,validation_path,test_path}가 비어 있으면 무엇을 채워
 
 import argparse
 import json
+import math
 import time
 from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
 
-from data import load_records, to_sft_example
+from data import format_duration, format_hm, load_records, to_sft_example
 
 MODEL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODEL_DIR.parents[2]
@@ -160,6 +161,47 @@ def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool, m
     )
 
 
+def build_step_timer():
+    """스텝별 소요 시간을 재는 TrainerCallback. transformers를 실제 학습할 때만 불러오려고 함수 안에서 만든다.
+
+    - on_step_end마다 logging_steps 주기로 "현재 스텝/전체 스텝 · 경과 시간 · 예상 남은 시간"을 로그에 남긴다.
+    - average_step_time()은 첫 스텝(워밍업: CUDA 커널 컴파일 등으로 느리다)을 빼고 평균을 낸다.
+    """
+    from transformers import TrainerCallback
+
+    class StepTimer(TrainerCallback):
+        def __init__(self):
+            self.step_durations: list[float] = []
+            self._step_start: float | None = None
+            self.train_start: float | None = None
+
+        def on_train_begin(self, targs, state, control, **kwargs):
+            self.train_start = time.perf_counter()
+
+        def on_step_begin(self, targs, state, control, **kwargs):
+            self._step_start = time.perf_counter()
+
+        def on_step_end(self, targs, state, control, **kwargs):
+            if self._step_start is not None:
+                self.step_durations.append(time.perf_counter() - self._step_start)
+            if state.global_step % max(targs.logging_steps, 1) == 0 or state.global_step >= state.max_steps:
+                elapsed = time.perf_counter() - self.train_start
+                avg = self.average_step_time()
+                remaining_steps = max(state.max_steps - state.global_step, 0)
+                eta = avg * remaining_steps if avg is not None else None
+                print(
+                    f"  [진행] step {state.global_step}/{state.max_steps} · 경과 {format_duration(elapsed)} "
+                    f"· 예상 남은 시간 {format_duration(eta)}",
+                    flush=True,
+                )
+
+        def average_step_time(self) -> float | None:
+            usable = self.step_durations[1:] or self.step_durations  # 첫 스텝(워밍업) 제외
+            return sum(usable) / len(usable) if usable else None
+
+    return StepTimer()
+
+
 def peak_vram_gb() -> dict:
     import torch
 
@@ -193,11 +235,12 @@ def main() -> None:
     data_paths = require_data_paths(config)
 
     train_records = load_records(data_paths["train_path"])
+    full_train_count = len(train_records)  # --limit와 상관없이 "전체 학습 스텝 수" 계산에 쓴다
     val_records = load_records(data_paths["validation_path"])
     if args.limit:
         train_records = train_records[: args.limit]
         val_records = val_records[: args.limit]
-    print(f"데이터: train {len(train_records)}건 / validation {len(val_records)}건")
+    print(f"데이터: train {len(train_records)}건 / validation {len(val_records)}건 (전체 train {full_train_count}건)")
 
     train_examples = [to_sft_example(r) for r in train_records]
     val_examples = [to_sft_example(r) for r in val_records]
@@ -235,6 +278,7 @@ def main() -> None:
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
 
+    step_timer = build_step_timer()
     trainer = SFTTrainer(
         model=peft_model,
         args=build_sft_config(
@@ -243,12 +287,38 @@ def main() -> None:
         train_dataset=Dataset.from_list(train_examples),
         eval_dataset=Dataset.from_list(val_examples) if val_examples else None,
         processing_class=tokenizer,
+        callbacks=[step_timer],
     )
 
     start = time.perf_counter()
     train_output = trainer.train()
     duration = time.perf_counter() - start
     peak = peak_vram_gb()
+
+    time_estimate = None
+    if args.max_steps:
+        # --limit와 상관없이 config의 전체 train 데이터(full_train_count) 기준으로 실제 학습에서 도는
+        # 스텝 수를 추정한다. 1 epoch당 스텝 수는 HF Trainer와 같은 방식(올림)으로 계산한다.
+        t = config["training"]
+        effective_batch = t["per_device_train_batch_size"] * t["gradient_accumulation_steps"]
+        steps_per_epoch = math.ceil(full_train_count / effective_batch)
+        total_train_steps = steps_per_epoch * t["num_train_epochs"]
+        avg_step_sec = step_timer.average_step_time()
+        estimated_total_sec = avg_step_sec * total_train_steps if avg_step_sec is not None else None
+        time_estimate = {
+            "avg_step_sec": round(avg_step_sec, 3) if avg_step_sec is not None else None,
+            "full_train_count": full_train_count,
+            "steps_per_epoch": steps_per_epoch,
+            "num_train_epochs": t["num_train_epochs"],
+            "total_train_steps": total_train_steps,
+            "estimated_total_sec": round(estimated_total_sec, 1) if estimated_total_sec is not None else None,
+            "estimated_total_hm": format_hm(estimated_total_sec),
+        }
+        print("\n--- 소요 시간 예측 (시험 실행 기준) ---")
+        print(f"  스텝 1회 평균 시간(첫 스텝 제외): {avg_step_sec:.2f}초" if avg_step_sec is not None else "  스텝 1회 평균 시간: 계산 불가 (스텝이 1개뿐)")
+        print(f"  전체 학습 스텝 수 (train {full_train_count}건, {t['num_train_epochs']}epoch 기준): {total_train_steps}")
+        print(f"  예상 전체 학습 시간: {time_estimate['estimated_total_hm']}")
+        print(f"  최대 VRAM: allocated {peak['peak_vram_allocated_gb']}GB / reserved {peak['peak_vram_reserved_gb']}GB")
 
     adapter_dir = output_dir / "adapter"
     trainer.save_model(str(adapter_dir))
@@ -273,6 +343,7 @@ def main() -> None:
         "counts": {"train": len(train_records), "validation": len(val_records)},
         "dataset_version": config["data"].get("dataset_version"),
         "smoke_test": {"limit": args.limit, "max_steps": args.max_steps} if (args.limit or args.max_steps) else None,
+        "time_estimate": time_estimate,
     }
     output_dir.joinpath("metrics.json").write_text(
         json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8"
