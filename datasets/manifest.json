@@ -1,0 +1,70 @@
+{
+  "dataset_name": "busan_review_sft_v1",
+  "strategy": "A_review_only",
+  "sources": {
+    "cjm": "datas/cjm/out/runs/silver_v1/silver.jsonl",
+    "sang": [
+      "datas/sang/out/runs/silver_2000_attraction/silver.jsonl",
+      "datas/sang/out/runs/silver_2000_hotel/silver.jsonl",
+      "datas/sang/out/runs/silver_2000_restaurant/silver.jsonl"
+    ],
+    "gold_test": "datas/cjm/out/runs/silver_v1/test/gold.jsonl"
+  },
+  "excluded": [
+    "cjm backup",
+    "knk Incheon data",
+    "Silver records assigned to test split",
+    "place-derived aspects from labels"
+  ],
+  "seed": 42,
+  "counts": {
+    "train": 3087,
+    "validation": 371,
+    "test_gold": 172
+  },
+  "category_counts": {
+    "train": {
+      "hotel": 651,
+      "restaurant": 1250,
+      "attraction": 1186
+    },
+    "validation": {
+      "hotel": 80,
+      "restaurant": 137,
+      "attraction": 154
+    },
+    "test_gold": {
+      "hotel": 53,
+      "restaurant": 65,
+      "attraction": 54
+    }
+  },
+  "source_counts": {
+    "train": {
+      "cjm": 1618,
+      "sang": 1469
+    },
+    "validation": {
+      "cjm": 214,
+      "sang": 157
+    },
+    "test_gold": {
+      "cjm": 172
+    }
+  },
+  "processing": {
+    "cjm": {
+      "removed_place_aspects": 912,
+      "excluded_test_or_unassigned": 173
+    },
+    "sang": {
+      "removed_place_aspects": 0,
+      "excluded_test_or_unassigned": 273
+    },
+    "gold_test": {
+      "removed_place_aspects": 91
+    },
+    "duplicate_train_removed": 0,
+    "duplicate_validation_removed": 0
+  }
+}
