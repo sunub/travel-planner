@@ -2,11 +2,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from travel_planner.repositories import scraps as scrap_repository
 from travel_planner.schemas.scraps import ScrapCreate, ScrapRead
+from travel_planner.services.scrap_processing import process_external_scrap
 
 
 async def create_scrap(session: AsyncSession, *, user_id: int, request: ScrapCreate) -> ScrapRead:
     scrap = await scrap_repository.create_scrap(session, user_id=user_id, request=request)
     await session.commit()
+    if scrap.source_url:
+        await process_external_scrap(session, scrap.scrap_id)
     return ScrapRead.model_validate(scrap)
 
 
