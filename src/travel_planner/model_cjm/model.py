@@ -58,7 +58,7 @@ def load_model(config: ModelConfig):
         "token": os.environ.get("HF_TOKEN"), "revision": config.revision, "trust_remote_code": True,
         "dtype": dtype, "device_map": {"": 0}, "attn_implementation": "sdpa",
     }
-    if config.mode == "qlora":
+    if config.mode == "qlora" or config.load_in_4bit:
         kwargs["quantization_config"] = BitsAndBytesConfig(
             load_in_4bit=True, bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=dtype, bnb_4bit_use_double_quant=True,

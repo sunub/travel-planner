@@ -33,8 +33,9 @@ def _training_revision(model_id: str, adapter_path: str | None) -> str | None:
     return data.get("revision") if data.get("model_id") == model_id else None
 
 
-def _load(model_id: str, mode: str, adapter_path: str | None):
-    config = ModelConfig(mode=mode, model_id=model_id, revision=_training_revision(model_id, adapter_path))
+def _load(model_id: str, mode: str, adapter_path: str | None, load_in_4bit: bool = False):
+    config = ModelConfig(mode=mode, model_id=model_id, revision=_training_revision(model_id, adapter_path),
+                         load_in_4bit=load_in_4bit)
     tokenizer = load_tokenizer(config)
     model = load_model(config)
     if mode in {"lora", "qlora"}:
@@ -78,12 +79,13 @@ def generate_batch(*, model: Any, tokenizer: Any, records: list[dict[str, Any]],
 
 
 def predict(*, model_id: str, mode: str, input_file: Path, output_file: Path,
-            adapter_path: str | None = None, max_new_tokens: int = 384, batch_size: int | None = None) -> None:
+            adapter_path: str | None = None, max_new_tokens: int = 384, batch_size: int | None = None,
+            load_in_4bit: bool = False) -> None:
     import torch
 
     batch_size = batch_size or int(os.environ.get("TRIPFIT_INFER_BATCH_SIZE", "8"))
     records = [json.loads(line) for line in Path(input_file).read_text(encoding="utf-8").splitlines() if line.strip()]
-    model, tokenizer = _load(model_id, mode, adapter_path)
+    model, tokenizer = _load(model_id, mode, adapter_path, load_in_4bit)
     tokenizer.padding_side = "left"  # 배치 생성은 왼쪽 패딩이어야 프롬프트 끝이 정렬된다
     output_file = Path(output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
