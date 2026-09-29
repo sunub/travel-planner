@@ -37,6 +37,8 @@ def validate_source_url(url: str) -> None:
 
 
 class JinaClient:
+    """Read one external URL through Jina Reader; search lives in JinaSearchClient."""
+
     async def extract(self, url: str) -> str:
         validate_source_url(url)
         api_key = get_settings().jina_api_key

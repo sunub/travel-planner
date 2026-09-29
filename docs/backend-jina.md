@@ -44,3 +44,20 @@ duration, and total recommendation duration. They omit credentials and full
 page text. For a fair Non-Jina comparison, keep the recommendation path,
 request/response schema, prompt, `OLLAMA_MODEL`, user requirements, scrap IDs,
 and DB data identical; vary only external URL content acquisition.
+
+## Optional Jina Search
+
+`JinaSearchClient` uses `GET https://s.jina.ai/` with `q`, `num`,
+`Authorization: Bearer JINA_API_KEY`, and `Accept: application/json`. The
+`search_place_reviews(place_name, limit=5)` service builds a review-related
+query and returns up to three to five ranked `JinaSearchResult` values. Each
+value has `source_url`, `title`, and `content_text` for a future review analysis
+input. Search is never called by the existing recommendation route, and its
+results are not saved or added to Review Profiles automatically. The same
+`JINA_API_KEY` setting is read from `.env`, which is ignored by Git.
+
+```python
+from travel_planner.services.jina_search import search_place_reviews
+
+results = await search_place_reviews("해운대", limit=3)
+```
