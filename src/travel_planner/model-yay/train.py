@@ -9,7 +9,8 @@ data.{train_path,validation_path,test_path}가 비어 있으면 무엇을 채워
 사용법:
   uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --dry-run
   uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml
-  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --max-samples 8
+  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml \\
+      --limit 32 --max-steps 5 --output-dir src/travel_planner/model-yay/artifacts/smoke
 """
 
 import argparse
@@ -31,8 +32,8 @@ def load_config(path: str) -> dict:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-def resolve_output_dir(config: dict) -> Path:
-    path = Path(config["output"]["artifacts_root"])
+def resolve_output_dir(config: dict, override: str | None = None) -> Path:
+    path = Path(override) if override else Path(config["output"]["artifacts_root"])
     return path if path.is_absolute() else REPO_ROOT / path
 
 
@@ -123,16 +124,21 @@ def build_peft_model(model, config: dict):
     return peft_model, target_modules
 
 
-def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool):
+def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool, max_steps: int | None):
     from trl import SFTConfig
 
     t = config["training"]
+    # --max-steps로 시험 실행할 때는 epoch 기준 저장/평가를 끈다. 32건짜리 스모크 데이터에서는
+    # 1 epoch가 몇 step 안 되고, max_steps가 epoch 중간에 끊기면 epoch 기준 strategy와 앞뒤가
+    # 맞지 않는다. 어댑터는 어차피 학습이 끝나면 trainer.save_model()로 따로 저장한다.
+    smoke = max_steps is not None
     return SFTConfig(
         output_dir=str(checkpoint_dir),
         seed=config["seed"],
         data_seed=config["seed"],
         learning_rate=t["learning_rate"],
         num_train_epochs=t["num_train_epochs"],
+        max_steps=max_steps if smoke else -1,
         per_device_train_batch_size=t["per_device_train_batch_size"],
         per_device_eval_batch_size=t.get("per_device_eval_batch_size", t["per_device_train_batch_size"]),
         gradient_accumulation_steps=t["gradient_accumulation_steps"],
@@ -145,8 +151,8 @@ def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool):
         gradient_checkpointing=t["gradient_checkpointing"],
         bf16=True,
         logging_steps=t.get("logging_steps", 10),
-        eval_strategy=t.get("eval_strategy", "epoch") if has_validation else "no",
-        save_strategy=t.get("save_strategy", "epoch"),
+        eval_strategy=(t.get("eval_strategy", "epoch") if has_validation else "no") if not smoke else "no",
+        save_strategy=t.get("save_strategy", "epoch") if not smoke else "no",
         save_total_limit=t.get("save_total_limit", 2),
         report_to="none",
         completion_only_loss=True,  # prompt(system+user)는 loss에서 빼고 assistant 응답만 학습한다
@@ -173,19 +179,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True)
     parser.add_argument("--dry-run", action="store_true", help="데이터와 첫 학습 예제만 보여주고 모델은 불러오지 않는다")
-    parser.add_argument("--max-samples", type=int, help="train/validation 앞에서 N건만 (스모크 실행)")
+    parser.add_argument("--limit", type=int, help="train/validation 앞에서 N건만 (스모크 실행)")
+    parser.add_argument("--max-steps", type=int, help="N 스텝만 학습하고 종료 (VRAM·속도 시험용)")
+    parser.add_argument("--output-dir", help="결과 저장 위치. 기본값은 config.yaml의 output.artifacts_root")
     args = parser.parse_args()
 
     load_dotenv(REPO_ROOT / ".env")
+    import os
+
+    print(f"HF_TOKEN: {'설정됨' if os.environ.get('HF_TOKEN') else '없음'} · HF_HOME: {os.environ.get('HF_HOME') or '기본값'}")
 
     config = load_config(args.config)
     data_paths = require_data_paths(config)
 
     train_records = load_records(data_paths["train_path"])
     val_records = load_records(data_paths["validation_path"])
-    if args.max_samples:
-        train_records = train_records[: args.max_samples]
-        val_records = val_records[: args.max_samples]
+    if args.limit:
+        train_records = train_records[: args.limit]
+        val_records = val_records[: args.limit]
     print(f"데이터: train {len(train_records)}건 / validation {len(val_records)}건")
 
     train_examples = [to_sft_example(r) for r in train_records]
@@ -200,8 +211,6 @@ def main() -> None:
         print("\ndry-run: 모델을 불러오지 않고 끝냅니다.")
         return
 
-    import os
-
     hf_token = os.environ.get("HF_TOKEN") or None  # 빈 문자열이면 None으로 (공개 모델이면 토큰 없이도 된다)
 
     from datasets import Dataset
@@ -209,7 +218,7 @@ def main() -> None:
     from trl import SFTTrainer
 
     set_seed(config["seed"])
-    output_dir = resolve_output_dir(config)
+    output_dir = resolve_output_dir(config, args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"모델: {config['model']['name_or_path']} (QLoRA, 4bit NF4) · artifacts: {output_dir}")
@@ -228,7 +237,9 @@ def main() -> None:
 
     trainer = SFTTrainer(
         model=peft_model,
-        args=build_sft_config(config, output_dir / "checkpoints", has_validation=bool(val_examples)),
+        args=build_sft_config(
+            config, output_dir / "checkpoints", has_validation=bool(val_examples), max_steps=args.max_steps
+        ),
         train_dataset=Dataset.from_list(train_examples),
         eval_dataset=Dataset.from_list(val_examples) if val_examples else None,
         processing_class=tokenizer,
@@ -261,6 +272,7 @@ def main() -> None:
         "adapter_path": str(adapter_dir),
         "counts": {"train": len(train_records), "validation": len(val_records)},
         "dataset_version": config["data"].get("dataset_version"),
+        "smoke_test": {"limit": args.limit, "max_steps": args.max_steps} if (args.limit or args.max_steps) else None,
     }
     output_dir.joinpath("metrics.json").write_text(
         json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8"
