@@ -1,10 +1,12 @@
-"""여러 QLoRA checkpoint를 validation으로 평가해서 best checkpoint를 고른다.
+"""여러 LoRA/QLoRA checkpoint를 validation으로 평가해서 best checkpoint를 고른다.
 
-train.py는 epoch마다 checkpoint를 남긴다 (config.yaml의 training.save_total_limit: 3, 모든 epoch를
-남긴다). 이 스크립트는 그 checkpoint들을 전부 validation으로 평가해서:
+train.py는 --method(qlora|lora)별로 artifacts/<method>/checkpoints/ 아래에 epoch마다 checkpoint를
+남긴다 (config.yaml의 training.save_total_limit: 3, 모든 epoch를 남긴다). 이 스크립트는 --method로
+고른 그 폴더의 checkpoint들을 전부 validation으로 평가해서:
   - checkpoint별 eval_loss(학습 중 기록된 로그, checkpoint-N/trainer_state.json에서 읽는다)와
     validation Aspect F1 · 리뷰 완전 일치율 · JSON 준수율을 표로 보여준다.
-  - validation Aspect F1이 가장 높은 checkpoint를 best로 골라 <output.artifacts_root>/best.json에 남긴다.
+  - validation Aspect F1이 가장 높은 checkpoint를 best로 골라 <output.artifacts_root>/<method>/best.json에
+    남긴다.
 
 Test는 이 스크립트에서 절대 평가하지 않는다. best가 정해진 뒤에는 evaluate.py를 test로 딱 한 번만
 따로 돌린다 (README.md의 "checkpoint 선택은 validation으로만, test는 best로 한 번만" 참고) — 그래야
@@ -15,8 +17,8 @@ test 점수를 보고 checkpoint를 고르는 일이 생기지 않는다.
 달라질 수 있다.
 
 사용법:
-  uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml
-  uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml \\
+  uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml --method qlora
+  uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml --method lora \\
       --max-samples 8   # 스모크 실행
 """
 
@@ -67,11 +69,13 @@ def read_checkpoint_eval_loss(checkpoint_dir: Path) -> float | None:
     return None
 
 
-def evaluate_checkpoint(config: dict, checkpoint_dir: Path, records: list[dict], hf_token: str | None) -> dict:
+def evaluate_checkpoint(
+    config: dict, checkpoint_dir: Path, records: list[dict], hf_token: str | None, method: str
+) -> dict:
     """checkpoint 하나를 validation records로 평가해 evaluate_predictions()의 "overall" 지표를 돌려준다."""
     import torch
 
-    tokenizer, model = load_model_for_eval(config, hf_token, checkpoint_dir)
+    tokenizer, model = load_model_for_eval(config, hf_token, checkpoint_dir, method)
     inference = config["inference"]
     outputs, _stats = generate_outputs(
         model, tokenizer, records, max_new_tokens=inference["max_new_tokens"], batch_size=inference["batch_size"]
@@ -103,14 +107,23 @@ def render_table(rows: list[dict]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True)
-    parser.add_argument("--checkpoints-dir", help="checkpoint-N 폴더들이 있는 위치. 기본값은 <output.artifacts_root>/checkpoints")
+    parser.add_argument(
+        "--method",
+        required=True,
+        choices=["qlora", "lora"],
+        help="train.py --method와 같은 값. checkpoint 위치(artifacts/<method>/checkpoints)와 base 로딩 "
+        "정밀도(qlora=4bit NF4, lora=bf16)를 정한다",
+    )
+    parser.add_argument(
+        "--checkpoints-dir", help="checkpoint-N 폴더들이 있는 위치. 기본값은 <output.artifacts_root>/<method>/checkpoints"
+    )
     parser.add_argument("--max-samples", type=int, help="validation 앞에서 N건만 (스모크 실행)")
     args = parser.parse_args()
 
     load_dotenv(REPO_ROOT / ".env")
 
     config = load_config(args.config)
-    output_dir = resolve_output_dir(config)
+    output_dir = resolve_output_dir(config, args.method)
     checkpoints_dir = Path(args.checkpoints_dir) if args.checkpoints_dir else output_dir / "checkpoints"
     checkpoints = find_checkpoints(checkpoints_dir)
     if not checkpoints:
@@ -132,7 +145,7 @@ def main() -> None:
     for checkpoint_dir in checkpoints:
         print(f"\n[{checkpoint_dir.name}] validation 평가 시작")
         eval_loss = read_checkpoint_eval_loss(checkpoint_dir)
-        overall = evaluate_checkpoint(config, checkpoint_dir, records, hf_token)
+        overall = evaluate_checkpoint(config, checkpoint_dir, records, hf_token, args.method)
         rows.append(
             {
                 "checkpoint": checkpoint_dir.name,
@@ -158,8 +171,11 @@ def main() -> None:
         "validation_num_samples": len(records),
         "candidates": rows,
         # test는 여기서 평가하지 않는다. best가 정해진 뒤 아래 명령으로 test를 한 번만 평가한다:
-        #   uv run python evaluate.py --config <config> --adapter <best_checkpoint_path> --split test
-        "note": "test는 이 스크립트에서 평가하지 않았다. best_checkpoint_path로 evaluate.py --split test를 한 번만 따로 돌린다.",
+        #   uv run python evaluate.py --config <config> --method <method> --adapter <best_checkpoint_path> --split test
+        "note": (
+            "test는 이 스크립트에서 평가하지 않았다. best_checkpoint_path로 evaluate.py "
+            f"--method {args.method} --split test를 한 번만 따로 돌린다."
+        ),
     }
     best_path = output_dir / "best.json"
     best_path.write_text(json.dumps(best_record, ensure_ascii=False, indent=2), encoding="utf-8")

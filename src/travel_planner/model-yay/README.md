@@ -1,9 +1,13 @@
-# model-yay — EXAONE-3.5-7.8B-Instruct QLoRA
+# model-yay — EXAONE-4.0-1.2B LoRA/QLoRA
 
-리뷰 → `{"traveler_context", "aspects"}` 추출 모델을 `LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct`로 QLoRA
+리뷰 → `{"traveler_context", "aspects"}` 추출 모델을 `LGAI-EXAONE/EXAONE-4.0-1.2B`로 LoRA/QLoRA
 파인튜닝하기 위한 코드. 프롬프트 형식·데이터 형식·평가 지표는 팀원 브랜치(`origin/lkh_train`)의
 `training/` 코드를 그대로 따른다 (`git show origin/lkh_train:<경로>`로 읽기만 했고, merge·checkout은
 하지 않았다). 같은 기준이어야 Gemma(팀원)·Qwen 모델과 비교할 수 있다.
+
+`--method qlora`(4bit NF4 양자화)와 `--method lora`(bf16, 양자화 없음) 두 방식을 지원한다 — LoRA
+r/alpha, 학습률, epoch, 데이터 등 나머지 설정은 완전히 같고, base 모델을 4bit로 올리느냐만 다르다.
+`train.py`/`evaluate.py`/`select_checkpoint.py` 모두 `--method`로 고른다.
 
 이 폴더 밖의 파일은 건드리지 않는다. `pyproject.toml`에도 의존성을 추가하지 않았으므로, 아래
 `requirements.txt`는 이 폴더 전용으로 별도 설치한다.
@@ -14,30 +18,44 @@
 | --- | --- |
 | `config.yaml` | 모델·양자화·LoRA·학습 하이퍼파라미터, 데이터 경로 |
 | `data.py` | JSONL 레코드 → 대화형 prompt-completion 예제 (schema.py 허용값 사용) |
-| `train.py` | 4bit QLoRA 학습. LoRA target_modules는 모델에서 자동으로 찾는다 |
-| `evaluate.py` | Base/QLoRA(또는 특정 checkpoint)를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
+| `train.py` | LoRA/QLoRA 학습 (`--method qlora\|lora`). LoRA target_modules는 모델에서 자동으로 찾는다 |
+| `evaluate.py` | Base/LoRA/QLoRA(또는 특정 checkpoint)를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
 | `select_checkpoint.py` | epoch별 checkpoint를 validation으로 평가해 best를 고른다 (test는 안 본다) |
 | `requirements.txt` | 이 폴더 전용 의존성 |
 
+## 왜 EXAONE 4.0인가 (EXAONE 3.5에서 전환)
+
+원래는 `LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct`로 시작했다. EXAONE 3.5(`model_type "exaone"`)는
+transformers에 내장돼 있지 않아 HF 리포의 원격 코드(`trust_remote_code=True`)가 필요했는데, 그 원격
+코드가 어떤 released transformers 버전과도 API가 맞지 않았다 — `transformers==5.0.0`에는
+`AttentionInterface.get_interface`가 없고(`AttributeError`), `transformers==5.17.0`에는 있지만
+`create_causal_mask`의 인자(`input_embeds`→`inputs_embeds` 개명, `cache_position` 제거)가 달라서
+`TypeError`가 났다. 원격 코드를 `exaone_local/`에 로컬로 복사해 `create_causal_mask` 호출부만
+`5.17.0`에 맞게 패치하는 방식으로 일단 해결했었지만, 이어서 `AutoTokenizer.from_pretrained` 쪽에서
+`PreTrainedConfig.convert_rope_params_to_dict`/`standardize_rope_params` 오류가 추가로 났다. 시간
+관계상 더 파지 않고, transformers 5.17.0에 **완전히 내장**돼 있는 `LGAI-EXAONE/EXAONE-4.0-1.2B`
+(`model_type "exaone4"`, 클래스 `Exaone4ForCausalLM`)로 전환했다 — 원격 코드도, `trust_remote_code`도,
+로컬 패치(`exaone_local/`, 지웠다)도 전혀 필요 없다. `train.py`/`evaluate.py`/`load_check.py`는 모두
+`AutoModelForCausalLM`/`AutoTokenizer`로 그냥 불러온다.
+
+파라미터 수가 7.8B → 1.2B로 작아진 것은 이 전환의 부작용이다 — 팀원 Gemma·Qwen과 크기를 맞춰 비교하려면
+추후 더 큰 EXAONE 4.0 변형이 나오면 바꿔야 할 수 있다.
+
+**사고 모드(enable_thinking)는 끈다.** EXAONE 4.0의 `chat_template.jinja`는 `enable_thinking`이
+`true`일 때만 `<think>\n`을 열어 두고, 그 외(`false`·미지정)엔 `<think>\n\n</think>\n\n`로 바로
+닫는다 — 즉 기본값이 이미 꺼짐이지만, 템플릿이 나중에 바뀌어도 안 흔들리게 `data.py`의
+`prompt_text()`가 `apply_chat_template(..., enable_thinking=False)`를 명시적으로 넘긴다(학습·추론
+공용 함수라 한 곳만 고치면 둘 다 반영된다). `load_check.py`의 데모 프롬프트도 같은 이유로
+`enable_thinking=False`를 넘긴다.
+
 ## 의존성 버전
 
-`requirements.txt`는 `transformers==5.0.0` / `trl==1.14.0` / `peft==0.21.0` / `bitsandbytes==0.50.2` /
-`accelerate==1.15.0`으로 고정되어 있다. EXAONE-3.5의 `trust_remote_code` 코드(2026-02-06 커밋
-`553ea25`부터)가 transformers 5.0/5.1 시점의 내부 API를 그대로 부르기 때문이다:
-
-- `RopeParameters`(`transformers.modeling_rope_utils`)는 transformers 5.0에서 생겼다 → `<5`면
-  `ImportError`.
-- `create_causal_mask(input_embeds=...)`(`transformers.masking_utils`)의 키워드 인자 이름이 5.2.0부터
-  `input_embeds` → `inputs_embeds`로 바뀌었다 → `>=5.2`면 `TypeError: unexpected keyword argument
-  'input_embeds'`.
-
-그래서 실제로 맞는 범위는 `5.0.x`~`5.1.x`뿐이다. 처음엔 팀원 브랜치(`origin/lkh_train`)가 Gemma4 QLoRA에
-쓰는 `transformers==5.17.0` 조합을 그대로 가져왔지만(`training/README.md`), EXAONE 3.5는 transformers에
-내장(`model_type "exaone"`)돼 있지 않아서(5.17.0엔 `exaone4`/`exaone4_5`/`exaone_moe`만 있다)
-`trust_remote_code: false`로 피해 갈 수도 없다. `trl==1.14.0`이 `transformers!=5.1.0`을 명시적으로
-막아 둬서(알려진 버그, transformers#43780), 남는 선택지는 `transformers==5.0.0`뿐이다.
-peft/bitsandbytes/accelerate는 팀원과 같은 버전을 유지했다 (`uv pip compile`로 충돌 없이 풀리는 것까지는
-확인했지만, 팀원처럼 실제 학습으로 검증된 조합은 아니다).
+`requirements.txt`는 팀원 브랜치(`origin/lkh_train`)의 Gemma4 QLoRA와 같은 조합 —
+`transformers==5.17.0` / `trl==1.14.0` / `peft==0.21.0` / `bitsandbytes==0.50.2` /
+`accelerate==1.15.0` — 을 쓴다. `trl==1.14.0`이 `transformers!=5.1.0`만 명시적으로 막아서(알려진
+버그, transformers#43780) `5.17.0`과는 충돌하지 않는다. peft/bitsandbytes/accelerate는 팀원과 같은
+버전이다 (`uv pip compile`로 충돌 없이 풀리는 것까지는 확인했지만, 팀원처럼 실제 학습으로 검증된
+조합은 아니다).
 
 transformers 5는 `TrainingArguments.warmup_ratio`를 없애고 `warmup_steps`가 1 미만 실수면 비율로
 취급하도록 바꿨다 (5.0.0부터 이미 이 규칙). `config.yaml`의 `training.warmup_steps: 0.03`과 `train.py`의
@@ -116,46 +134,49 @@ GPU 학습에는 CUDA용 torch가 필요하다. PyPI 기본 torch가 CPU 전용�
 
 저장소 루트의 `.env`에 `HF_TOKEN`, `HF_HOME`을 채운다 (`.env`는 Git에서 제외된다).
 
-## 학습 (QLoRA)
+## 학습 (LoRA/QLoRA)
 
 ```bash
-# 데이터 없이 첫 학습 예제(prompt/completion)만 확인
-uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --dry-run
+# 데이터 없이 첫 학습 예제(prompt/completion)만 확인 (--method는 형식상 필요하지만 dry-run엔 안 쓰인다)
+uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora --dry-run
 
 # 실제 학습 (데이터 경로를 config.yaml에 채운 뒤)
-uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml
+uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora
+uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method lora
 
 # 짧게 스모크 실행: train/validation 앞 32건만, 5 스텝만, 결과는 별도 폴더에
-uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml \
+uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora \
     --limit 32 --max-steps 5 --output-dir src/travel_planner/model-yay/artifacts/smoke
 ```
 
-학습이 끝나면 `output.artifacts_root`(기본 `src/travel_planner/model-yay/artifacts`, `--output-dir`로
-바꿀 수 있다) 아래에 `adapter/`(LoRA 어댑터 + tokenizer), `checkpoints/`(epoch별 체크포인트),
-`metrics.json`(파라미터 수·최대 VRAM·학습 시간·loss), `log_history.json`(step별 loss 기록)이 생긴다.
-`--max-steps`로 시험 실행하면 `metrics.json`의 `time_estimate`에 스텝 1회 평균 시간(첫 스텝 제외)과
-config의 전체 train 데이터 기준 예상 전체 학습 시간이 함께 남는다. 학습 중에는 로그에 현재 스텝/전체
-스텝·경과 시간·예상 남은 시간이 주기적으로 찍힌다.
+학습이 끝나면 `output.artifacts_root/<method>`(기본 `src/travel_planner/model-yay/artifacts/qlora`
+또는 `.../lora`, `--output-dir`로 바꿀 수 있다) 아래에 `adapter/`(LoRA 어댑터 + tokenizer),
+`checkpoints/`(epoch별 체크포인트), `metrics.json`(파라미터 수·최대 VRAM·학습 시간·loss),
+`log_history.json`(step별 loss 기록)이 생긴다. qlora와 lora는 서로 다른 폴더를 쓰므로 산출물이 섞이지
+않는다. `--max-steps`로 시험 실행하면 `metrics.json`의 `time_estimate`에 스텝 1회 평균 시간(첫 스텝
+제외)과 config의 전체 train 데이터 기준 예상 전체 학습 시간이 함께 남는다. 학습 중에는 로그에 현재
+스텝/전체 스텝·경과 시간·예상 남은 시간이 주기적으로 찍힌다.
 
 ## 평가
 
 ```bash
-# Base 모델 (기본 --split test)
+# Base 모델 (기본 --split test, --method 필요 없음 — Base는 항상 bf16)
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml
 
-# 학습이 끝난 최종 어댑터, validation으로
+# 학습이 끝난 최종 어댑터, validation으로 (--method는 그 어댑터를 학습할 때 쓴 것과 같아야 한다)
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
-    --adapter src/travel_planner/model-yay/artifacts/adapter --split validation
+    --method qlora --adapter src/travel_planner/model-yay/artifacts/qlora/adapter --split validation
 
 # epoch 2 checkpoint 하나만 평가 (train.py가 자동으로 남기는 checkpoints/checkpoint-N도 그대로 넣을 수 있다)
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
-    --adapter src/travel_planner/model-yay/artifacts/checkpoints/checkpoint-2 --split validation
+    --method lora --adapter src/travel_planner/model-yay/artifacts/lora/checkpoints/checkpoint-2 --split validation
 ```
 
 `predictions/<run>_<split>.jsonl`(리뷰별 원문 출력·파싱 결과·채점)과 `metrics_<run>_<split>.json`
-(aspect F1·attribute/sentiment 정확도·evidence 지표·JSON 유효성 등, 팀원과 동일한 지표)이 생긴다.
-`run`은 `base` 또는 `--adapter`로 준 폴더 이름(`adapter`, `checkpoint-2` 등)이라서, 여러 checkpoint를
-돌아가며 평가해도 서로 덮어쓰지 않는다.
+(aspect F1·attribute/sentiment 정확도·evidence 지표·JSON 유효성 등, 팀원과 동일한 지표)이 생긴다 —
+`--adapter`가 있으면 `output.artifacts_root/<method>` 아래(그 방식의 checkpoint·adapter와 같은
+폴더), 없으면(Base) `output.artifacts_root` 바로 아래. `run`은 `base` 또는 `--adapter`로 준 폴더
+이름(`adapter`, `checkpoint-2` 등)이라서, 여러 checkpoint를 돌아가며 평가해도 서로 덮어쓰지 않는다.
 
 첫 배치를 처리한 직후, 그때까지의 리뷰 1건당 평균 추론 시간을 기준으로 validation 전체와 test 전체를
 평가하면 얼마나 걸릴지 한 번 출력한다 (`--split`이나 `--max-samples`로 일부만 돌려도 두 split 전체
@@ -170,15 +191,16 @@ Gold+Silver)가 낙관적으로 부풀려진다.
 
 ```bash
 # epoch 3개(config.yaml의 training.save_total_limit: 3) checkpoint를 모두 validation으로 평가
-uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml
+uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml --method qlora
+uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml --method lora
 ```
 
 checkpoint별 `eval_loss`(학습 로그, `checkpoint-N/trainer_state.json`에서 읽는다)와 validation
 Aspect F1·리뷰 완전 일치율·JSON 준수율을 표로 보여주고, **validation Aspect F1이 가장 높은
-checkpoint**를 `<output.artifacts_root>/best.json`에 기록한다. test는 이 스크립트에서 절대 평가하지
-않는다 — best가 정해지면 아래처럼 `evaluate.py`를 `--split test`로 한 번만 따로 돌린다.
+checkpoint**를 `<output.artifacts_root>/<method>/best.json`에 기록한다. test는 이 스크립트에서 절대
+평가하지 않는다 — best가 정해지면 아래처럼 `evaluate.py`를 `--split test`로 한 번만 따로 돌린다.
 
 ```bash
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
-    --adapter <best.json의 best_checkpoint_path> --split test
+    --method qlora --adapter <best.json의 best_checkpoint_path> --split test
 ```

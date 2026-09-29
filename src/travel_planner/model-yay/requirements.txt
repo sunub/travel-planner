@@ -1,22 +1,24 @@
-# EXAONE-3.5-7.8B-Instruct는 trust_remote_code=True로 커스텀 모델링 코드(modeling_exaone.py,
-# configuration_exaone.py, revision 553ea25 = HF의 main)를 함께 받는다. 이 코드는 transformers 5.0/5.1
-# 시점의 내부 API를 그대로 부른다:
-#   - RopeParameters (transformers.modeling_rope_utils): transformers 5.0에서 새로 생김 → transformers<5면
-#     ImportError.
-#   - create_causal_mask(input_embeds=...) (transformers.masking_utils): 이 키워드 인자 이름이 5.2.0부터
-#     input_embeds → inputs_embeds로 바뀌었다 → transformers>=5.2면 TypeError: unexpected keyword
-#     argument 'input_embeds'.
-# 즉 이 원격 코드가 실제로 맞는 범위는 transformers 5.0.x~5.1.x뿐이다. transformers 5.17.0(팀원
-# origin/lkh_train의 Gemma4 파이프라인이 쓰는 버전)에서는 뒤 문제가 난다. EXAONE 3.5는 transformers에
-# 내장(model_type "exaone")돼 있지도 않다 — 5.17.0에는 exaone4/exaone4_5/exaone_moe만 있고 EXAONE 3.5의
-# "exaone"은 없어서, trust_remote_code: false로는 못 돌린다 (config.yaml에 이 경위를 적어 뒀다).
+# EXAONE-3.5-7.8B-Instruct의 HF 원격 모델링 코드(modeling_exaone.py, configuration_exaone.py,
+# revision 553ea25 = HF의 main)는 릴리스된 어떤 transformers 버전과도 API가 정확히 맞지 않는다:
+#   - ALL_ATTENTION_FUNCTIONS.get_interface(...) (transformers.modeling_utils): AttentionInterface가
+#     GeneralInterface(MutableMapping)의 get_interface 메서드를 갖는 버전에서만 동작한다.
+#     transformers==5.0.0에는 이 메서드 자체가 없다 → AttributeError: 'AttentionInterface' object has
+#     no attribute 'get_interface'. transformers==5.17.0에는 있다(직접 소스 확인).
+#   - create_causal_mask(input_embeds=..., cache_position=...) (transformers.masking_utils): 이 시그니처는
+#     transformers 5.0.x~5.1.x까지만 맞는다. 5.2 이후 키워드가 input_embeds → inputs_embeds로 바뀌었고,
+#     5.17.0에서는 cache_position 인자 자체가 없어졌다(내부에서 past_key_values/position_ids로 대체 계산).
+# 즉 5.0.0과 5.17.0 각각 정반대 지점에서 깨진다 — 원격 코드를 그대로 쓸 수 있는 transformers 버전은
+# 없다. 그래서 원격 코드를 exaone_local/에 로컬로 복사해 create_causal_mask 호출부만 5.17.0 시그니처에
+# 맞게 고쳤다(get_interface는 5.17.0에 그대로 있어 손대지 않았다). train.py/evaluate.py/load_check.py는
+# 이 로컬 클래스로 모델을 불러온다(trust_remote_code로 원격 코드를 받지 않는다). 자세한 근거는
+# exaone_local/modeling_exaone.py 상단 주석과 각 변경 줄의 인라인 주석을 참고.
 #
-# trl==1.14.0은 "transformers!=5.1.0"을 명시적으로 막아 놓았다 (알려진 transformers 버그,
-# transformers#43780). 그래서 남는 선택지는 transformers==5.0.0 하나뿐이다. peft==0.21.0/
-# accelerate==1.15.0/bitsandbytes==0.50.2는 팀원과 같은 버전을 그대로 두었다 — 이 조합으로
-# `uv pip compile`이 충돌 없이 풀린다는 것까지는 확인했지만(설치 시점 메타데이터 검증), 팀원처럼
-# transformers 5.17.0으로 실제 학습까지 검증된 조합은 아니다. 아래 확인 명령으로 config/tokenizer가
-# 문제없이 열리는지, 학습 스모크(--max-steps)로 forward/backward가 실제로 도는지 반드시 먼저 본다.
+# 이제 팀원 origin/lkh_train의 Gemma4 파이프라인과 같은 조합(transformers 5.17.0)을 쓸 수 있다.
+# trl==1.14.0은 "transformers!=5.1.0"만 명시적으로 막아서(transformers#43780) 5.17.0과는 충돌하지
+# 않는다. peft==0.21.0/accelerate==1.15.0/bitsandbytes==0.50.2도 팀원과 같은 버전이다 — `uv pip compile`
+# 충돌 없이 풀린다는 것은 확인했지만, 이 저장소에서 실제 학습까지 검증된 조합은 아니다. 아래 확인
+# 명령으로 config/tokenizer가 문제없이 열리는지, 학습 스모크(--max-steps)로 forward/backward가 실제로
+# 도는지 반드시 먼저 본다.
 #
 # transformers 5는 TrainingArguments.warmup_ratio를 없애고 warmup_steps가 1 미만 실수면 비율로
 # 취급하도록 바꿨다 (5.0.0부터 이미 이 규칙이다). config.yaml의 training.warmup_steps, train.py의
@@ -24,7 +26,7 @@
 #
 # 실제 설치 전에 팀 GPU 환경(CUDA 버전)에 맞는 torch를 먼저 설치하는 것을 권장한다.
 torch>=2.14.0
-transformers==5.0.0
+transformers==5.17.0
 peft==0.21.0
 trl==1.14.0
 bitsandbytes==0.50.2

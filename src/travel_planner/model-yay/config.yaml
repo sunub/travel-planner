@@ -1,4 +1,4 @@
-# EXAONE-3.5-7.8B-Instruct QLoRA 학습·평가 설정.
+# EXAONE-4.0-1.2B LoRA/QLoRA 학습·평가 설정.
 #
 # 데이터셋은 아직 확정되지 않았다. data.* 경로가 비어 있으면 train.py/evaluate.py가 멈추고
 # 무엇을 채워야 하는지 알려준다. 실제 파일이 정해지면 이 경로만 바꾸면 된다.
@@ -9,14 +9,24 @@
 seed: 42
 
 model:
-  name_or_path: LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct
-  # EXAONE 3.5(model_type "exaone")는 transformers 5.17.0에 내장돼 있지 않다 (exaone4/exaone4_5/
-  # exaone_moe만 내장). 그래서 false로 바꿀 수 없고, HF 리포의 원격 코드(modeling_exaone.py)를 그대로
-  # 받아써야 한다. requirements.txt에 이 원격 코드와 맞는 transformers 버전을 고정해 뒀다.
-  trust_remote_code: true
+  name_or_path: LGAI-EXAONE/EXAONE-4.0-1.2B
+  # EXAONE 3.5(model_type "exaone")는 transformers에 내장돼 있지 않아 원격 코드가 필요했고(exaone_local/,
+  # 이 커밋의 이전 버전 참고), 그 원격 코드가 어떤 released transformers 버전과도 API가 맞지 않아서
+  # (AutoTokenizer.from_pretrained의 rope_parameters 표준화 단계에서 오류) 시간 관계상 EXAONE 4.0
+  # 1.2B로 전환했다. EXAONE 4.0(model_type "exaone4", 클래스 Exaone4ForCausalLM)은 transformers
+  # 5.17.0에 내장돼 있어 원격 코드·trust_remote_code·로컬 패치가 전혀 필요 없다 — AutoModelForCausalLM/
+  # AutoTokenizer로 그냥 불러온다 (train.py/evaluate.py/load_check.py 참고).
+  #
+  # 사고 모드(enable_thinking): EXAONE 4.0의 chat_template.jinja는 `enable_thinking`이 true일 때만
+  # <think>\n을 열어 두고, 그 외(false·미지정 모두)엔 <think>\n\n</think>\n\n로 바로 닫는다 — 즉 안
+  # 켜면 기본이 이미 꺼짐이다. 그래도 앞으로 템플릿이 바뀌어도 흔들리지 않게 data.py의 prompt_text()가
+  # apply_chat_template(..., enable_thinking=False)를 명시적으로 넘긴다(학습·추론 공용 함수라 한 곳만
+  # 고치면 둘 다 반영된다).
   revision: null # 재현성을 위해 커밋 해시로 고정할 수 있다
   attn_implementation: sdpa
 
+# --method qlora일 때만 쓴다 (--method lora는 양자화 없이 bf16으로 올린다). train.py/evaluate.py/
+# select_checkpoint.py 참고.
 quantization:
   load_in_4bit: true
   bnb_4bit_quant_type: nf4
@@ -29,7 +39,11 @@ lora:
   dropout: 0.05
   bias: none
   # target_modules는 적지 않는다. train.py가 로드한 모델의 nn.Linear 층 이름을 직접 읽어 자동으로 찾고,
-  # 찾은 이름을 로그로 남긴다 (EXAONE은 Gemma와 층 이름이 달라 하드코딩하지 않는다).
+  # 찾은 이름을 로그로 남긴다. EXAONE 4.0은 실제로 확인해 보니 Llama 계열과 같은 이름
+  # (q_proj/k_proj/v_proj/o_proj, gate_proj/up_proj/down_proj)을 쓰지만, 그래도 하드코딩하지 않고
+  # 자동 탐색을 그대로 둔다 — 모델을 바꿔도 이 파일을 안 건드리게.
+  # --method qlora와 lora는 이 lora.* 값을 포함해 데이터·학습 하이퍼파라미터를 전부 동일하게 쓴다.
+  # 유일한 차이는 base 모델을 4bit로 양자화하느냐(qlora) bf16 그대로 두느냐(lora)뿐이다.
 
 training:
   learning_rate: 2.0e-4
@@ -65,4 +79,6 @@ inference:
   batch_size: 4
 
 output:
-  artifacts_root: src/travel_planner/model-yay/artifacts # Git 제외 권장 (어댑터·체크포인트·예측 결과)
+  # Git 제외 권장 (어댑터·체크포인트·예측 결과). train.py/evaluate.py/select_checkpoint.py는 --method별로
+  # 이 아래에 qlora/, lora/ 하위 폴더를 따로 써서 두 방식의 산출물이 섞이지 않게 한다.
+  artifacts_root: src/travel_planner/model-yay/artifacts

@@ -149,8 +149,14 @@ def prompt_text(record: dict, tokenizer) -> str:
     "다음은 assistant가 답할 차례"라는 표시(add_generation_prompt=True)까지 포함한, 실제로 모델에
     넣는 prompt 그 자체다. evaluate.py의 generate_outputs()도 이 함수로 prompt를 만든다 — 두 곳이
     각자 비슷하게 짜는 게 아니라 함수 하나를 같이 써야, 나중에 한쪽만 고쳐서 어긋나는 일이 없다.
+
+    enable_thinking=False: EXAONE 4.0의 chat_template.jinja는 이 값이 true일 때만 <think>\n을 열어
+    두고 나머지(false·미지정)는 <think>\n\n</think>\n\n로 바로 닫는다 — 이미 기본값이 꺼짐이지만,
+    템플릿이 나중에 바뀌어도 안 흔들리도록 명시적으로 끈다.
     """
-    return tokenizer.apply_chat_template(build_messages(record), tokenize=False, add_generation_prompt=True)
+    return tokenizer.apply_chat_template(
+        build_messages(record), tokenize=False, add_generation_prompt=True, enable_thinking=False
+    )
 
 
 def encode_example(tokenizer, record: dict, max_seq_length: int) -> dict:

@@ -1,18 +1,21 @@
-"""Base 모델 또는 QLoRA 어댑터를 같은 조건(그리디 디코딩, 같은 max_new_tokens)으로 평가한다.
+"""Base 모델 또는 LoRA/QLoRA 어댑터를 같은 조건(그리디 디코딩, 같은 max_new_tokens)으로 평가한다.
 
-  --adapter 없음: config.yaml의 원본 모델을 그대로 불러와 Base로 평가한다 (4bit로 올리지 않는다).
-  --adapter 있음: 4bit로 올린 원본 모델에 어댑터를 얹어 QLoRA로 평가한다. train.py가 학습 끝에 저장하는
-    adapter/ 폴더뿐 아니라, epoch마다 자동 저장되는 checkpoints/checkpoint-N 폴더도 그대로 받는다.
+  --adapter 없음: config.yaml의 원본 모델을 그대로 불러와 Base(bf16, 양자화 없음)로 평가한다.
+  --adapter 있음: --method(qlora|lora)로 학습 때와 같은 정밀도로 원본 모델을 올린 뒤 어댑터를 얹어
+    평가한다 (qlora=4bit NF4, lora=bf16). train.py가 학습 끝에 저장하는 adapter/ 폴더뿐 아니라,
+    epoch마다 자동 저장되는 checkpoints/checkpoint-N 폴더도 그대로 받는다.
 
-predictions/<run>_<split>.jsonl과 metrics_<run>_<split>.json을 config.yaml의 output.artifacts_root
-아래에 남긴다 (run은 "base" 또는 어댑터/checkpoint 폴더 이름 — "adapter", "checkpoint-2" 등. 팀원처럼
-run 디렉터리로 나누지 않으므로, 서로 다른 checkpoint·split 평가 결과가 덮어쓰지 않게 파일명에 넣는다).
+predictions/<run>_<split>.jsonl과 metrics_<run>_<split>.json을 남긴다 — --adapter가 있으면
+config.yaml의 output.artifacts_root/<method> 아래(train.py가 그 방식의 checkpoint·adapter를 남기는
+곳과 같은 폴더), --adapter가 없으면(Base) output.artifacts_root 바로 아래(Base는 method와 무관하므로).
+(run은 "base" 또는 어댑터/checkpoint 폴더 이름 — "adapter", "checkpoint-2" 등. 서로 다른
+checkpoint·split 평가 결과가 덮어쓰지 않게 파일명에 넣는다.)
 
 채점 로직(라벨 검사·JSON 파싱·지표 계산)은 팀원 브랜치(origin/lkh_train)의
 `src/travel_planner/finetune/{labels.py,evaluation/parser.py,evaluation/metrics.py,evaluation/evaluator.py}`를
 그대로 옮긴 것이다(`git show origin/lkh_train:<경로>`로 읽기만 했다. merge·checkout 없음). 이 함수들은
 원래도 모델과 무관한 순수 함수라 Gemma용 코드를 그대로 재사용할 수 있었다. 지표 정의는 그 파일들의
-docstring과 동일하다 (팀원 docs/evaluation-plan.md 2절 기준). 같은 지표를 써야 Base/QLoRA뿐 아니라
+docstring과 동일하다 (팀원 docs/evaluation-plan.md 2절 기준). 같은 지표를 써야 Base/LoRA/QLoRA뿐 아니라
 팀원의 Gemma·Qwen 결과와도 비교할 수 있다.
 
 사용법:
@@ -21,7 +24,11 @@ docstring과 동일하다 (팀원 docs/evaluation-plan.md 2절 기준). 같은 �
 
   # QLoRA 어댑터 평가
   uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \\
-      --adapter src/travel_planner/model-yay/artifacts/adapter
+      --method qlora --adapter src/travel_planner/model-yay/artifacts/qlora/adapter
+
+  # LoRA 어댑터 평가
+  uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \\
+      --method lora --adapter src/travel_planner/model-yay/artifacts/lora/adapter
 """
 
 import argparse
@@ -464,13 +471,21 @@ def load_config(path: str) -> dict:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-def resolve_output_dir(config: dict) -> Path:
+def resolve_output_dir(config: dict, method: str | None = None) -> Path:
+    """method가 있으면 artifacts_root/<method>(train.py가 그 방식의 checkpoint·adapter를 남기는 곳과
+    같은 폴더)를, 없으면(Base 평가) artifacts_root를 그대로 쓴다."""
     path = Path(config["output"]["artifacts_root"])
+    if method:
+        path = path / method
     return path if path.is_absolute() else REPO_ROOT / path
 
 
-def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path | None):
-    """--adapter 없음: Base(원본 정밀도)로 로드. --adapter 있음: 4bit로 올리고 어댑터를 얹는다.
+def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path | None, method: str | None):
+    """--adapter 없음: Base(bf16, 양자화 없음)로 로드. --adapter 있음: method로 학습 때와 같은 정밀도로
+    올리고(qlora=4bit NF4, lora=bf16) 어댑터를 얹는다.
+
+    EXAONE 4.0은 transformers에 내장돼 있어(train.py의 load_tokenizer_and_model 참고)
+    trust_remote_code나 로컬 패치 없이 AutoModelForCausalLM/AutoTokenizer로 바로 불러온다.
 
     adapter_path는 train.py가 학습 끝에 저장하는 최종 adapter/ 폴더뿐 아니라, HF Trainer가 epoch마다
     자동으로 남기는 checkpoints/checkpoint-N 폴더도 그대로 받는다 (adapter_config.json +
@@ -482,17 +497,15 @@ def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path |
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
     model_cfg = config["model"]
-    trust_remote_code = model_cfg.get("trust_remote_code", True)
     tokenizer = AutoTokenizer.from_pretrained(
         model_cfg["name_or_path"],
-        trust_remote_code=trust_remote_code,
         token=hf_token,
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
     quantization_config = None
-    if adapter_path is not None:
+    if adapter_path is not None and method == "qlora":
         quant = config["quantization"]
         compute_dtype = {"bf16": torch.bfloat16, "fp16": torch.float16}[quant.get("bnb_4bit_compute_dtype", "bf16")]
         quantization_config = BitsAndBytesConfig(
@@ -505,7 +518,6 @@ def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path |
     model = AutoModelForCausalLM.from_pretrained(
         model_cfg["name_or_path"],
         revision=model_cfg.get("revision"),
-        trust_remote_code=trust_remote_code,
         dtype=torch.bfloat16 if quantization_config is None else None,
         quantization_config=quantization_config,
         attn_implementation=model_cfg.get("attn_implementation"),
@@ -525,12 +537,21 @@ def main() -> None:
     parser.add_argument(
         "--adapter",
         type=Path,
-        help="QLoRA 어댑터 폴더. 없으면 Base 모델을 평가한다. 최종 adapter/ 폴더뿐 아니라 "
+        help="LoRA/QLoRA 어댑터 폴더. 없으면 Base 모델을 평가한다. 최종 adapter/ 폴더뿐 아니라 "
         "checkpoints/checkpoint-N(epoch마다 자동 저장된 것)도 그대로 넣을 수 있다",
+    )
+    parser.add_argument(
+        "--method",
+        choices=["qlora", "lora"],
+        help="--adapter를 평가할 때 필수. 그 어댑터를 학습할 때와 같은 정밀도로 base를 올린다 "
+        "(qlora=4bit NF4, lora=bf16). --adapter 없이 Base만 평가할 때는 쓰지 않는다(Base는 항상 bf16)",
     )
     parser.add_argument("--split", default="test", choices=["test", "validation"])
     parser.add_argument("--max-samples", type=int, help="앞에서 N건만 (스모크 실행)")
     args = parser.parse_args()
+
+    if args.adapter and not args.method:
+        raise SystemExit("--adapter를 평가하려면 --method(qlora 또는 lora)를 지정하세요 — 학습 때와 같은 정밀도로 base를 올려야 합니다.")
 
     load_dotenv(REPO_ROOT / ".env")
 
@@ -543,7 +564,8 @@ def main() -> None:
     records = load_records(dataset_path)
     if args.max_samples:
         records = records[: args.max_samples]
-    print(f"{args.split} {len(records)}건 · 모델 {config['model']['name_or_path']} · {'QLoRA' if args.adapter else 'Base'}")
+    run_label = args.method.upper() if args.adapter else "Base"
+    print(f"{args.split} {len(records)}건 · 모델 {config['model']['name_or_path']} · {run_label}")
 
     # validation·test 전체 건수 (--split, --max-samples와 무관하게). 첫 배치 처리 후 이 두 split을
     # 통째로 평가하면 걸릴 예상 시간을 보여주는 데 쓴다.
@@ -556,7 +578,7 @@ def main() -> None:
 
     hf_token = os.environ.get("HF_TOKEN") or None
 
-    tokenizer, model = load_model_for_eval(config, hf_token, args.adapter)
+    tokenizer, model = load_model_for_eval(config, hf_token, args.adapter, args.method)
     inference = config["inference"]
     outputs, stats = generate_outputs(
         model,
@@ -568,12 +590,14 @@ def main() -> None:
     )
     result = evaluate_predictions(records, outputs)
 
-    method = "qlora" if args.adapter else "base"
+    method = args.method if args.adapter else "base"
     # 어댑터/checkpoint 폴더 이름(예: "adapter", "checkpoint-2")까지 파일명에 넣는다. method만으로는
     # checkpoint-1과 checkpoint-2 평가 결과가 서로 덮어써서, 여러 checkpoint를 돌아가며 평가하는
     # select_checkpoint.py 같은 용도에서 결과가 섞인다.
     run_name = args.adapter.name if args.adapter else "base"
-    output_dir = resolve_output_dir(config)
+    # --adapter가 있으면 그 method의 artifacts 폴더(train.py가 쓰는 곳)에, 없으면(Base) artifacts_root
+    # 바로 아래에 남긴다.
+    output_dir = resolve_output_dir(config, args.method if args.adapter else None)
     predictions_dir = output_dir / "predictions"
     predictions_dir.mkdir(parents=True, exist_ok=True)
     predictions_path = predictions_dir / f"{run_name}_{args.split}.jsonl"

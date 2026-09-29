@@ -1,15 +1,21 @@
-"""EXAONE-3.5-7.8B-Instruct QLoRA 학습.
+"""EXAONE-4.0-1.2B LoRA/QLoRA 학습.
 
 이 스크립트를 명시적으로 실행하기 전까지는 모델을 내려받거나 학습을 시작하지 않는다 (--dry-run은
 모델을 아예 불러오지 않는다). 데이터셋이 아직 확정되지 않았으므로 config.yaml의
 data.{train_path,validation_path,test_path}가 비어 있으면 무엇을 채워야 하는지 알려주고 멈춘다.
 
+--method로 qlora(4bit NF4 양자화)와 lora(bf16, 양자화 없음)를 고른다. LoRA r/alpha, 학습률, epoch,
+데이터 등 나머지 설정은 두 방식이 완전히 같다 — 차이는 base 모델을 4bit로 올리느냐뿐이다. 산출물은
+config.yaml의 output.artifacts_root 아래 --method별 하위 폴더(artifacts/qlora, artifacts/lora)에
+따로 남는다.
+
 인증은 저장소 루트의 .env(HF_TOKEN, HF_HOME)를 python-dotenv로 읽는다. 토큰 값은 로그에 출력하지 않는다.
 
 사용법:
-  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --dry-run
-  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml
-  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml \\
+  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora --dry-run
+  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora
+  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method lora
+  uv run python src/travel_planner/model-yay/train.py --config src/travel_planner/model-yay/config.yaml --method qlora \\
       --limit 32 --max-steps 5 --output-dir src/travel_planner/model-yay/artifacts/smoke
 """
 
@@ -33,8 +39,10 @@ def load_config(path: str) -> dict:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-def resolve_output_dir(config: dict, override: str | None = None) -> Path:
-    path = Path(override) if override else Path(config["output"]["artifacts_root"])
+def resolve_output_dir(config: dict, method: str, override: str | None = None) -> Path:
+    """--output-dir을 명시하면 그 경로를 그대로 쓴다. 아니면 artifacts_root/<method>(qlora 또는 lora)를
+    쓴다 — 두 방식의 checkpoint·adapter·metrics.json이 서로 덮어쓰지 않게 나눈다."""
+    path = Path(override) if override else Path(config["output"]["artifacts_root"]) / method
     return path if path.is_absolute() else REPO_ROOT / path
 
 
@@ -51,7 +59,8 @@ def require_data_paths(config: dict) -> dict:
 def find_lora_target_modules(model) -> list[str]:
     """모델의 nn.Linear 층 이름(리프 이름)을 자동으로 찾는다.
 
-    EXAONE은 Gemma와 층 이름이 다르므로 하드코딩하지 않고, 실제로 불러온 모델을 순회해서 찾는다.
+    모델을 바꿔도(EXAONE 4.0은 실제로 q_proj/k_proj/v_proj/o_proj, gate_proj/up_proj/down_proj로
+    Llama 계열과 같다) 이 파일을 안 건드리게 하드코딩하지 않고, 실제로 불러온 모델을 순회해서 찾는다.
     lm_head는 어휘 크기만큼 큰 출력층이라 LoRA 대상에서 뺀다.
     """
     import torch.nn as nn
@@ -65,17 +74,22 @@ def find_lora_target_modules(model) -> list[str]:
     return sorted(names)
 
 
-def load_tokenizer_and_model(config: dict, hf_token: str | None):
+def load_tokenizer_and_model(config: dict, hf_token: str | None, method: str):
+    """method="qlora": base를 4bit NF4로 양자화해서 올린다. method="lora": 양자화 없이 bf16 그대로
+    올린다. 그 외(LoRA 대상 탐색, 데이터, 하이퍼파라미터)는 두 방식이 완전히 같다.
+
+    EXAONE 4.0(model_type "exaone4")은 transformers 5.17.0에 내장돼 있어(Exaone4ForCausalLM)
+    AutoModelForCausalLM/AutoTokenizer로 바로 불러온다 — trust_remote_code도, 로컬 패치도 필요 없다
+    (config.yaml의 model 주석 참고).
+    """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
     model_cfg = config["model"]
-    trust_remote_code = model_cfg.get("trust_remote_code", True)
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_cfg["name_or_path"],
         revision=model_cfg.get("revision"),
-        trust_remote_code=trust_remote_code,
         token=hf_token,
     )
     if tokenizer.chat_template is None:
@@ -83,21 +97,27 @@ def load_tokenizer_and_model(config: dict, hf_token: str | None):
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    quant = config["quantization"]
-    compute_dtype = {"bf16": torch.bfloat16, "fp16": torch.float16}[quant.get("bnb_4bit_compute_dtype", "bf16")]
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=quant["load_in_4bit"],
-        bnb_4bit_quant_type=quant.get("bnb_4bit_quant_type", "nf4"),
-        bnb_4bit_use_double_quant=quant.get("bnb_4bit_use_double_quant", True),
-        bnb_4bit_compute_dtype=compute_dtype,
-    )
+    quantization_config = None
+    compute_dtype = torch.bfloat16
+    if method == "qlora":
+        quant = config["quantization"]
+        compute_dtype = {"bf16": torch.bfloat16, "fp16": torch.float16}[quant.get("bnb_4bit_compute_dtype", "bf16")]
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=quant["load_in_4bit"],
+            bnb_4bit_quant_type=quant.get("bnb_4bit_quant_type", "nf4"),
+            bnb_4bit_use_double_quant=quant.get("bnb_4bit_use_double_quant", True),
+            bnb_4bit_compute_dtype=compute_dtype,
+        )
+    elif method != "lora":
+        raise ValueError(f"알 수 없는 method: {method!r} (qlora 또는 lora)")
+
     model = AutoModelForCausalLM.from_pretrained(
         model_cfg["name_or_path"],
         revision=model_cfg.get("revision"),
-        trust_remote_code=trust_remote_code,
-        quantization_config=bnb_config,
+        quantization_config=quantization_config,
         attn_implementation=model_cfg.get("attn_implementation"),
         device_map={"": 0},
+        dtype=compute_dtype,
         token=hf_token,
     )
     return tokenizer, model
@@ -226,6 +246,12 @@ def last_value(log_history: list[dict], key: str) -> float | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True)
+    parser.add_argument(
+        "--method",
+        required=True,
+        choices=["qlora", "lora"],
+        help="qlora=4bit NF4 양자화 / lora=bf16, 양자화 없음. 나머지 설정은 동일하다",
+    )
     parser.add_argument("--dry-run", action="store_true", help="데이터와 첫 학습 예제만 보여주고 모델은 불러오지 않는다")
     parser.add_argument("--limit", type=int, help="train/validation 앞에서 N건만 (스모크 실행)")
     parser.add_argument("--max-steps", type=int, help="N 스텝만 학습하고 종료 (VRAM·속도 시험용)")
@@ -264,11 +290,12 @@ def main() -> None:
     from trl import SFTTrainer
 
     set_seed(config["seed"])
-    output_dir = resolve_output_dir(config, args.output_dir)
+    output_dir = resolve_output_dir(config, args.method, args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"모델: {config['model']['name_or_path']} (QLoRA, 4bit NF4) · artifacts: {output_dir}")
-    tokenizer, base_model = load_tokenizer_and_model(config, hf_token)
+    method_desc = "4bit NF4" if args.method == "qlora" else "bf16, 양자화 없음"
+    print(f"모델: {config['model']['name_or_path']} ({args.method.upper()}, {method_desc}) · artifacts: {output_dir}")
+    tokenizer, base_model = load_tokenizer_and_model(config, hf_token, args.method)
 
     # 토큰화 + assistant 응답만 남기는 labels 마스킹을 직접 한다 (encode_example, data.py 참고).
     # TRL의 prompt/completion 자동 마스킹에 맡기지 않는다 — EXAONE 채팅 템플릿에서 "Mismatch between
@@ -341,7 +368,7 @@ def main() -> None:
     final_eval = trainer.evaluate() if val_examples else {}
     metrics = {
         "model_id": config["model"]["name_or_path"],
-        "method": "qlora",
+        "method": args.method,
         "seed": config["seed"],
         "lora": config["lora"] | {"target_modules": target_modules},
         "trainable_params": trainable_params,
