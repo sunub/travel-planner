@@ -47,12 +47,12 @@ training:
   save_total_limit: 2
 
 data:
-  # 아직 정해지지 않았다. JSONL 경로 (datas/common/README.md 파이프라인 결과 형식: review_id, place_id,
-  # category, synthetic, review, label{traveler_context, aspects}, tier). 저장소 루트 기준 상대경로도 된다.
-  train_path: null
-  validation_path: null
-  test_path: null
-  dataset_version: null
+  # 팀 공통 데이터셋 (datas/yay/in/datasets/). train.jsonl·validation.jsonl은 tier: silver,
+  # test.jsonl은 tier: gold (+ silver_label, decision 필드가 더 있다). 정답은 세 파일 모두 label 필드만 쓴다.
+  train_path: datas/yay/in/datasets/train.jsonl
+  validation_path: datas/yay/in/datasets/validation.jsonl
+  test_path: datas/yay/in/datasets/test.jsonl
+  dataset_version: yay_v1
 
 inference:
   max_new_tokens: 768 # Gold 라벨 JSON 최대 길이 기준(팀원 training/configs/common.yaml)에 맞춘 값

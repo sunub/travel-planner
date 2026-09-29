@@ -18,13 +18,25 @@
 | `evaluate.py` | Base/QLoRA를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
 | `requirements.txt` | 이 폴더 전용 의존성 |
 
+## 데이터셋
+
+`config.yaml`의 `data.{train_path,validation_path,test_path}`는 팀 공통 데이터셋
+(`datas/yay/in/datasets/{train,validation,test}.jsonl`)을 가리킨다.
+
+| split | 건수 | tier | 카테고리 |
+| --- | --- | --- | --- |
+| train | 3,087 | silver | attraction 1186 · hotel 651 · restaurant 1250 |
+| validation | 371 | silver | attraction 154 · hotel 80 · restaurant 137 |
+| test | 172 | gold (+ `silver_label`, `decision` 필드) | attraction 54 · hotel 53 · restaurant 65 |
+
+`data.py`는 세 파일 모두 `category`/`review`/`label` 필드만 읽는다. `generation`, `labeling`,
+`silver_label`, `decision`, `split`, `source_member` 같은 부가 필드는 무시되므로 그대로 읽을 수 있다.
+정답은 항상 `label` 필드다 (`test.jsonl`의 `silver_label`은 Teacher-LLM 초안이라 정답으로 쓰지 않는다).
+
 ## 아직 정해지지 않은 것
 
-- **데이터셋 경로**: `config.yaml`의 `data.{train_path,validation_path,test_path}`가 비어 있다.
-  실제 Gold/Silver JSONL 경로가 정해지면 채운다. 형식은 `datas/common/README.md`의 공통 파이프라인 결과
-  (`review_id, place_id, category, synthetic, review, label{traveler_context, aspects}, tier`)를 따른다.
-- **Train/Validation/Test 분할**: 팀원처럼 `place_id` 단위 group split을 쓸지, 어떤 비율로 나눌지는
-  아직 정하지 않았다. 지금은 이미 나뉜 JSONL 3개를 경로로 받는 것까지만 구현했다.
+- **Train/Validation/Test 분할 방법**: 이 데이터셋은 이미 나뉜 상태로 받는다. 팀원처럼 `place_id` 단위
+  group split을 다시 만들지, 이 분할을 그대로 쓸지는 아직 정하지 않았다.
 - Base와 QLoRA 평가 결과는 `metrics_base.json` / `metrics_qlora.json`으로 따로 남긴다 (팀원처럼 run
   디렉터리로 나누지 않으므로, 파일명으로 구분한다).
 
