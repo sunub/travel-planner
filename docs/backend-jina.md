@@ -1,6 +1,7 @@
 # Jina backend experiment
 
 This branch keeps the `feature/backend-base` FastAPI, SQLAlchemy, and Ollama layout.
+Application code lives in `backend/travel_planner/`; run commands from the repository root.
 It reads external URLs with the [Jina Reader API](https://jina.ai/reader/) using
 `GET https://r.jina.ai/{source_url}`, `Authorization: Bearer JINA_API_KEY`, and
 `Accept: application/json`, and `X-Retain-Images: none`. The `data.content` Markdown is stored in

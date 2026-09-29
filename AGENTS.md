@@ -4,7 +4,7 @@ Fine-tunes a model with LoRA/QLoRA to turn Busan hotel, restaurant, and
 attraction reviews into structured Context / Aspect / Attribute / Sentiment /
 Evidence records, and compares Base, LoRA, and QLoRA on the same data.
 Python >= 3.12, managed with `uv` from the repository root; package code lives in
-`src/travel_planner/`. Loading a model, training, and applying an adapter are
+`backend/travel_planner/`. Loading a model, training, and applying an adapter are
 separate steps that each need an explicit request.
 
 `README.md` defines the current scope. `docs/init-plan.md` describes an earlier
