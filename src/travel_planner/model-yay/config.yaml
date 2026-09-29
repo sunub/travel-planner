@@ -47,7 +47,10 @@ training:
   logging_steps: 10
   eval_strategy: epoch
   save_strategy: epoch
-  save_total_limit: 2
+  save_total_limit: 3 # epoch 3번 = checkpoint 3개, 전부 남긴다 (select_checkpoint.py가 validation으로 고른다)
+  # load_best_model_at_end는 안 쓴다(기본값 false로 둔다) — eval_loss는 학습 로그로만 남기고, checkpoint
+  # 선택은 validation 지표(Aspect F1 등)로 select_checkpoint.py가 따로 한다. 그래서
+  # metric_for_best_model도 안 쓴다.
 
 data:
   # 팀 공통 데이터셋 (datas/yay/in/datasets/). train.jsonl·validation.jsonl은 tier: silver,

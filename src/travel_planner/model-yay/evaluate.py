@@ -1,10 +1,12 @@
 """Base 모델 또는 QLoRA 어댑터를 같은 조건(그리디 디코딩, 같은 max_new_tokens)으로 평가한다.
 
   --adapter 없음: config.yaml의 원본 모델을 그대로 불러와 Base로 평가한다 (4bit로 올리지 않는다).
-  --adapter 있음: 4bit로 올린 원본 모델에 어댑터를 얹어 QLoRA로 평가한다.
+  --adapter 있음: 4bit로 올린 원본 모델에 어댑터를 얹어 QLoRA로 평가한다. train.py가 학습 끝에 저장하는
+    adapter/ 폴더뿐 아니라, epoch마다 자동 저장되는 checkpoints/checkpoint-N 폴더도 그대로 받는다.
 
-predictions/<method>_<split>.jsonl과 metrics_<method>.json을 config.yaml의 output.artifacts_root 아래에 남긴다
-(method는 base|qlora. 팀원처럼 run 디렉터리로 나누지 않으므로, Base와 QLoRA 결과가 서로 덮어쓰지 않게 파일명에 넣는다).
+predictions/<run>_<split>.jsonl과 metrics_<run>_<split>.json을 config.yaml의 output.artifacts_root
+아래에 남긴다 (run은 "base" 또는 어댑터/checkpoint 폴더 이름 — "adapter", "checkpoint-2" 등. 팀원처럼
+run 디렉터리로 나누지 않으므로, 서로 다른 checkpoint·split 평가 결과가 덮어쓰지 않게 파일명에 넣는다).
 
 채점 로직(라벨 검사·JSON 파싱·지표 계산)은 팀원 브랜치(origin/lkh_train)의
 `src/travel_planner/finetune/{labels.py,evaluation/parser.py,evaluation/metrics.py,evaluation/evaluator.py}`를
@@ -468,14 +470,21 @@ def resolve_output_dir(config: dict) -> Path:
 
 
 def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path | None):
-    """--adapter 없음: Base(원본 정밀도)로 로드. --adapter 있음: 4bit로 올리고 어댑터를 얹는다."""
+    """--adapter 없음: Base(원본 정밀도)로 로드. --adapter 있음: 4bit로 올리고 어댑터를 얹는다.
+
+    adapter_path는 train.py가 학습 끝에 저장하는 최종 adapter/ 폴더뿐 아니라, HF Trainer가 epoch마다
+    자동으로 남기는 checkpoints/checkpoint-N 폴더도 그대로 받는다 (adapter_config.json +
+    adapter_model.safetensors만 있으면 PeftModel.from_pretrained가 그걸로 충분하다). tokenizer는
+    checkpoint-N 폴더에 있을 수도, 없을 수도 있어서 항상 원본 모델 id에서 불러온다 — LoRA는 tokenizer를
+    바꾸지 않으므로 이래도 결과가 같다.
+    """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
     model_cfg = config["model"]
     trust_remote_code = model_cfg.get("trust_remote_code", True)
     tokenizer = AutoTokenizer.from_pretrained(
-        str(adapter_path) if adapter_path else model_cfg["name_or_path"],
+        model_cfg["name_or_path"],
         trust_remote_code=trust_remote_code,
         token=hf_token,
     )
@@ -513,7 +522,12 @@ def load_model_for_eval(config: dict, hf_token: str | None, adapter_path: Path |
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True)
-    parser.add_argument("--adapter", type=Path, help="QLoRA 어댑터 폴더. 없으면 Base 모델을 평가한다")
+    parser.add_argument(
+        "--adapter",
+        type=Path,
+        help="QLoRA 어댑터 폴더. 없으면 Base 모델을 평가한다. 최종 adapter/ 폴더뿐 아니라 "
+        "checkpoints/checkpoint-N(epoch마다 자동 저장된 것)도 그대로 넣을 수 있다",
+    )
     parser.add_argument("--split", default="test", choices=["test", "validation"])
     parser.add_argument("--max-samples", type=int, help="앞에서 N건만 (스모크 실행)")
     args = parser.parse_args()
@@ -555,11 +569,14 @@ def main() -> None:
     result = evaluate_predictions(records, outputs)
 
     method = "qlora" if args.adapter else "base"
+    # 어댑터/checkpoint 폴더 이름(예: "adapter", "checkpoint-2")까지 파일명에 넣는다. method만으로는
+    # checkpoint-1과 checkpoint-2 평가 결과가 서로 덮어써서, 여러 checkpoint를 돌아가며 평가하는
+    # select_checkpoint.py 같은 용도에서 결과가 섞인다.
+    run_name = args.adapter.name if args.adapter else "base"
     output_dir = resolve_output_dir(config)
     predictions_dir = output_dir / "predictions"
     predictions_dir.mkdir(parents=True, exist_ok=True)
-    # method별로 따로 남긴다 (Base 평가와 QLoRA 평가가 서로의 결과를 덮어쓰지 않게).
-    predictions_path = predictions_dir / f"{method}_{args.split}.jsonl"
+    predictions_path = predictions_dir / f"{run_name}_{args.split}.jsonl"
     with open(predictions_path, "w", encoding="utf-8") as f:
         for sample in result["samples"]:
             f.write(json.dumps(sample, ensure_ascii=False) + "\n")
@@ -576,7 +593,7 @@ def main() -> None:
         "inference": stats,
         "predictions_path": str(predictions_path),
     }
-    metrics_path = output_dir / f"metrics_{method}.json"
+    metrics_path = output_dir / f"metrics_{run_name}_{args.split}.json"
     metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"완료: {metrics_path}")
 

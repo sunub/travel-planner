@@ -15,7 +15,8 @@
 | `config.yaml` | 모델·양자화·LoRA·학습 하이퍼파라미터, 데이터 경로 |
 | `data.py` | JSONL 레코드 → 대화형 prompt-completion 예제 (schema.py 허용값 사용) |
 | `train.py` | 4bit QLoRA 학습. LoRA target_modules는 모델에서 자동으로 찾는다 |
-| `evaluate.py` | Base/QLoRA를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
+| `evaluate.py` | Base/QLoRA(또는 특정 checkpoint)를 같은 조건(그리디, 같은 max_new_tokens)으로 평가·채점 |
+| `select_checkpoint.py` | epoch별 checkpoint를 validation으로 평가해 best를 고른다 (test는 안 본다) |
 | `requirements.txt` | 이 폴더 전용 의존성 |
 
 ## 의존성 버전
@@ -96,8 +97,8 @@ transformers 5는 `TrainingArguments.warmup_ratio`를 없애고 `warmup_steps`�
 
 - **Train/Validation/Test 분할 방법**: 이 데이터셋은 이미 나뉜 상태로 받는다. 팀원처럼 `place_id` 단위
   group split을 다시 만들지, 이 분할을 그대로 쓸지는 아직 정하지 않았다.
-- Base와 QLoRA 평가 결과는 `metrics_base.json` / `metrics_qlora.json`으로 따로 남긴다 (팀원처럼 run
-  디렉터리로 나누지 않으므로, 파일명으로 구분한다).
+- 평가 결과는 `metrics_<run>_<split>.json`으로 남긴다 (`run`은 `base` 또는 어댑터/checkpoint 폴더
+  이름. 팀원처럼 run 디렉터리로 나누지 않으므로, 파일명으로 구분한다).
 
 이 상태에서는 `train.py`/`evaluate.py`를 `--dry-run` 없이 실행하면 데이터 경로가 없다는 안내와 함께
 멈춘다. 모델 다운로드·실제 학습은 아직 하지 않는다.
@@ -139,17 +140,45 @@ config의 전체 train 데이터 기준 예상 전체 학습 시간이 함께 �
 ## 평가
 
 ```bash
-# Base 모델
+# Base 모델 (기본 --split test)
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml
 
-# QLoRA 어댑터
+# 학습이 끝난 최종 어댑터, validation으로
 uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
-    --adapter src/travel_planner/model-yay/artifacts/adapter
+    --adapter src/travel_planner/model-yay/artifacts/adapter --split validation
+
+# epoch 2 checkpoint 하나만 평가 (train.py가 자동으로 남기는 checkpoints/checkpoint-N도 그대로 넣을 수 있다)
+uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
+    --adapter src/travel_planner/model-yay/artifacts/checkpoints/checkpoint-2 --split validation
 ```
 
-`predictions/<method>_<split>.jsonl`(리뷰별 원문 출력·파싱 결과·채점)과 `metrics_<method>.json`
+`predictions/<run>_<split>.jsonl`(리뷰별 원문 출력·파싱 결과·채점)과 `metrics_<run>_<split>.json`
 (aspect F1·attribute/sentiment 정확도·evidence 지표·JSON 유효성 등, 팀원과 동일한 지표)이 생긴다.
+`run`은 `base` 또는 `--adapter`로 준 폴더 이름(`adapter`, `checkpoint-2` 등)이라서, 여러 checkpoint를
+돌아가며 평가해도 서로 덮어쓰지 않는다.
 
 첫 배치를 처리한 직후, 그때까지의 리뷰 1건당 평균 추론 시간을 기준으로 validation 전체와 test 전체를
 평가하면 얼마나 걸릴지 한 번 출력한다 (`--split`이나 `--max-samples`로 일부만 돌려도 두 split 전체
 기준으로 보여준다).
+
+## Checkpoint 선택 (best 고르기)
+
+**규칙: checkpoint 선택은 validation으로만 한다. test는 최종적으로 고른 best checkpoint로 딱 한 번만
+평가한다.** test 점수를 보면서 checkpoint를 고르면(=test로 여러 번 돌려서 제일 잘 나온 걸 고르면) test가
+더는 "한 번도 학습에 안 쓰인 기준"이 아니게 되어, 그 이후의 모든 비교(Base vs LoRA vs QLoRA, Gold vs
+Gold+Silver)가 낙관적으로 부풀려진다.
+
+```bash
+# epoch 3개(config.yaml의 training.save_total_limit: 3) checkpoint를 모두 validation으로 평가
+uv run python src/travel_planner/model-yay/select_checkpoint.py --config src/travel_planner/model-yay/config.yaml
+```
+
+checkpoint별 `eval_loss`(학습 로그, `checkpoint-N/trainer_state.json`에서 읽는다)와 validation
+Aspect F1·리뷰 완전 일치율·JSON 준수율을 표로 보여주고, **validation Aspect F1이 가장 높은
+checkpoint**를 `<output.artifacts_root>/best.json`에 기록한다. test는 이 스크립트에서 절대 평가하지
+않는다 — best가 정해지면 아래처럼 `evaluate.py`를 `--split test`로 한 번만 따로 돌린다.
+
+```bash
+uv run python src/travel_planner/model-yay/evaluate.py --config src/travel_planner/model-yay/config.yaml \
+    --adapter <best.json의 best_checkpoint_path> --split test
+```

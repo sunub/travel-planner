@@ -154,7 +154,11 @@ def build_sft_config(config: dict, checkpoint_dir: Path, has_validation: bool, m
         logging_steps=t.get("logging_steps", 10),
         eval_strategy=(t.get("eval_strategy", "epoch") if has_validation else "no") if not smoke else "no",
         save_strategy=t.get("save_strategy", "epoch") if not smoke else "no",
-        save_total_limit=t.get("save_total_limit", 2),
+        save_total_limit=t.get("save_total_limit", 3),
+        # best checkpoint는 여기서 안 고른다. eval_loss는 로그로만 남기고, 실제 선택은 validation
+        # 지표(Aspect F1 등)로 select_checkpoint.py가 따로 한다 — 그래서 load_best_model_at_end를
+        # 켜지 않고 metric_for_best_model도 안 준다 (기본값 False로 둔다).
+        load_best_model_at_end=False,
         report_to="none",
         # completion_only_loss는 안 쓴다. 데이터셋에 이미 -100으로 마스킹한 labels가 있으면(encode_example,
         # data.py) TRL은 그걸 그대로 쓰고 자체 prompt/completion 마스킹은 건너뛴다(trl SFTTrainer의
