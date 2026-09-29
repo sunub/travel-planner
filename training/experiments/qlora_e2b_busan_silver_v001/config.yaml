@@ -1,0 +1,77 @@
+seed: 42
+model:
+  name_or_path: google/gemma-4-E2B-it
+  revision: null
+  attn_implementation: sdpa
+  device_map: null
+  text_only: true
+  offload_per_layer_embeddings: true
+data:
+  dataset_path: null
+  dataset_version: busan_review_sft_v1
+  split_manifest: null
+  extra_train_paths: []
+  max_samples: null
+  split_files:
+    train: datas/lkh/out/v2/train.jsonl
+    validation: datas/lkh/out/v2/validation.jsonl
+    test: datas/lkh/out/v2/test.jsonl
+split:
+  version: busan_review_sft_v1
+  ratios:
+    train: 0.8
+    validation: 0.1
+    test: 0.1
+  large_place_min_reviews: 30
+prompt:
+  system_template: training/prompts/system.txt
+  user_template: training/prompts/user.txt
+  chat_template_kwargs:
+    enable_thinking: false
+output:
+  artifacts_root: training/artifacts
+  experiments_root: training/experiments
+inference:
+  max_new_tokens: 768
+  batch_size: 8
+precision: auto
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: .*language_model.*\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)$
+  bias: none
+training:
+  learning_rate: 0.0002
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 16
+  max_length: 2048
+  warmup_steps: 0.03
+  weight_decay: 0.0
+  lr_scheduler_type: cosine
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit
+  gradient_checkpointing: true
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  report_to: none
+  extra_args:
+    load_best_model_at_end: true
+    metric_for_best_model: eval_loss
+    greater_is_better: false
+evaluation:
+  run_after_train: true
+  split: test
+experiment_name: qlora_e2b_busan_silver
+method: qlora
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: auto
+  prepare_for_kbit_training: false
+config_path: C:\Users\Admin\Desktop\travel_project\travel-planner\training\configs\qlora_busan_v2.yaml
