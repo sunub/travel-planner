@@ -13,6 +13,10 @@ wheels/
 # Secrets
 .env
 
+# 팀원별 원본(in)과 생성 결과(out). 커밋하지 않는다
+datas/*/in/
+datas/*/out/
+
 # 모델 학습 산출물(adapter·checkpoint·GGUF·병합 가중치). 수 GB라 커밋하지 않는다
 artifacts/
 
